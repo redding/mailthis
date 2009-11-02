@@ -2,9 +2,10 @@ require 'mailer/exceptions'
 
 module Mailer
   class Config
-    include Mailer::Exceptions
-    
-    CONFIGS = [:server, :domain, :port, :reply_to, :username, :password, :authentication, :content_type, :charset, :environment]
+
+    # TODO: look into abstracting port settings better based on server access type
+    # => ie, TLS or SSL or whatever
+    CONFIGS = [:server, :domain, :port, :username, :password, :authentication, :environment, :default_from]
     CONFIGS.each do |config|
       attr_reader config
     end
@@ -18,10 +19,8 @@ module Mailer
         instance_variable_set("@#{config}", configs[config])
       end
       @authentication ||= :login
-      @reply_to ||= @username
-      @content_type ||= 'text/plain'
-      @charset ||= 'UTF-8'
-      @environment ||= 'development'
+      @environment ||= Mailer::ENVIRONMENT[:development]
+      @default_from ||= @username
     end
     
     def log_file=(file)

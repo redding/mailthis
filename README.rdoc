@@ -23,24 +23,25 @@ with Gmail accounts via TLS.
       config.username = "test@example.com"
       config.password = 'secret'
       config.authentication = "plain"         # not required, default is "login"
-      config.reply_to = "noreply@example.com" # not required, default is :username
-      config.content_type = "text/html"       # not required, default is "text/plain"
-      config.charset = 'UTF-8'                # not required, default is "UTF-8"
+      config.environment = Mailer.production  # not required, default is Mailer.development
+      config.default_from = "me@example.com"  # not required, default is config.username
 
       # not required: setup a file to log mails to
       config.log_file = "log/email.log"
     end
     
     # send mails with the configured mailer...
+    # note: only requires :from (if no config.default_from), :to, and :subject
     Mailer.send({
+      :from => 'bob@example.com',                      # not required, defaults to config.default_from
+      :reply_to => 'bob@me.com',                       # not required
       :to => "test@example.com",
-      :cc => "another@example.com",
+      :cc => "Al <another@example.com>",               # send with specific naming
       :bcc => ["one@example.com", "two@example.com"],  # send to multiple addresses
       :subject => "a message"
-    }) do
+    }) do     # not required, don't pass .send a block if you don't want your mail to have a body
       "a message body"
     end
-    
 
 == License
 
