@@ -1,19 +1,29 @@
 require 'openssl'
 require 'net/smtp'
 require 'tmail'
+require 'log4r'
 
 require 'mailer/exceptions'
 require 'mailer/config'
+require 'mailer/deliveries'
 require 'mailer/tls'
 
 module Mailer
   
+  REQUIRED_FIELDS = [:from, :to, :subject]
+  DEFAULT_CONTENT_TYPE = "text/plain"
+  DEFAULT_CHARSET = "UTF-8"
+  
   ENVIRONMENT = {
     :development => 'development',
+    :test => 'test',
     :production => 'production'
   }
   def self.development
     ENVIRONMENT[:development]
+  end
+  def self.test
+    ENVIRONMENT[:test]
   end
   def self.production
     ENVIRONMENT[:production]
@@ -27,54 +37,79 @@ module Mailer
     @@config
   end
   
+  @@deliveries ||= Mailer::Deliveries.new
+  def self.deliveries
+    @@deliveries
+  end
+  
+  # Macro style helper for sending email based on the Mailer configuration
   def self.send(settings={})
     @@config.check
-    mail = generate_mail(settings)
+    mail = build_tmail(settings)
     mail.body = yield(mail) if block_given?
     mail.body ||= ''
-    @@config.environment.to_s == Mailer::ENVIRONMENT[:production] ? send_mail(mail) : log_mail(mail)
+    deliver_tmail(mail)
+    # TODO: support :cc and :bcc as well
     log(:info, "Sent '#{mail.subject}' to #{mail.to.join(',')}")
     mail
   end
 
-  protected
-  
-  def self.generate_mail(settings)
-    check_settings(settings)
+  # Returns a tmail Mail obj based on a hash of settings
+  # => same settings that the .send macro accepts
+  def self.build_tmail(some_settings)
+    settings = some_settings.dup
+    settings[:from] ||= @@config.default_from
     mail = TMail::Mail.new
 
+    # Defaulted settings
+    mail.date = Time.now
+    mail.content_type = DEFAULT_CONTENT_TYPE
+    mail.charset = DEFAULT_CHARSET
+
     # Required settings
-    mail.from = Array.new([settings[:from]])
-    mail.to = Array.new([settings[:to]])
-    mail.subject = settings[:subject]
+    REQUIRED_FIELDS.each {|field| mail.send("#{field}=", settings.delete(field))}
 
     # Optional settings
-    # => TODO, write better handler to let tmail settings just "pass thru"
-    mail.date = settings.has_key?(:date) ? settings[:date] : Time.now
-    mail.set_content_type(settings.has_key?(:content_type) ? settings[:content_type] : 'text/plain')
-    mail.charset = settings.has_key?(:charset) ? settings[:charset] : 'UTF-8'
-    mail.reply_to = Array.new([settings[:reply_to]]) if settings.has_key?(:reply_to)
-    mail.cc = Array.new([settings[:cc]]) if settings.has_key?(:cc)
-    mail.bcc = Array.new([settings[:bcc]])  if settings.has_key?(:bcc)
+    # => settings "pass thru" to the tmail Mail obj
+    settings.each do |field, value|
+      mail.send("#{field}=", value) if mail.respond_to?("#{field}=")
+    end
 
     mail
   end
   
-  def self.send_mail(mail)
-    raise Mailer::SendError, "cannot send, bad (or empty) mail object given." unless mail
-    Net::SMTP.start(@@config.server, @@config.port, @@config.domain, @@config.username, @@config.password, @@config.authentication) do |server|
-      mail.to.each {|recipient| server.send_message(mail.to_s, mail.from, recipient) }
+  # Deliver a tmail Mail obj depending on configured environment
+  # => production?: using Net::SMTP
+  # => test?: add to deliveries cache
+  # => development?: log mail
+  def self.deliver_tmail(mail)
+    check_mail(mail)
+    if @@config.production?
+      # deliver using Net::SMTP
+      Net::SMTP.start(@@config.server, @@config.port, @@config.domain, @@config.username, @@config.password, @@config.authentication) do |server|
+        # TODO: support :cc and :bcc as well
+        mail.to.each {|recipient| server.send_message(mail.to_s, mail.from, recipient) }
+      end
+    elsif @@config.test?
+      # Add to the deliveries cache
+      @@deliveries << mail
+    else
+      # Log a delivery
+      log_tmail(tmail)
     end
   end
   
-  def self.log_mail(mail)
+  # Logs a tmail Mail obj delivery
+  def self.log_tmail(mail)
     log(:debug, mail.to_s)
   end
   
-  def self.check_settings(settings)
-    settings[:from] ||= @@config.default_from
-    [:from, :to, :subject].each do |setting|
-      raise Mailer::SendError, "cannot send, #{setting} not specified." unless settings[setting]
+  protected
+  
+  def self.check_mail(tmail)
+    raise Mailer::SendError, "cannot send, bad mail object given." unless tmail && tmail.kind_of?(TMail::Mail)
+    REQUIRED_FIELDS.each do |field|
+      raise Mailer::SendError, "cannot send, #{field} not specified." unless tmail.send(field)
     end
   end
   

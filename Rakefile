@@ -19,6 +19,9 @@ spec = Gem::Specification.new do |s|
   
   s.add_dependency('log4r')
   s.add_dependency('tmail', '>= 1.2.3.0')
+
+  # to run the test suite, you will need this as well
+  #s.add_dependency('kelredd-useful', '>= 0.2.0')  # gem install kelredd-useful --source http://gemcutter.org
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|

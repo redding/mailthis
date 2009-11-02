@@ -2,8 +2,7 @@
 
 == Description
 
-This is just a little gem to let you configure and send email.  It specifically works
-with Gmail accounts via TLS.
+This is just a little gem to let you configure and send email using TMail over Net:SMTP.
 
 == Installation
 

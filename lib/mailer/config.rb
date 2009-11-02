@@ -7,7 +7,7 @@ module Mailer
     # => ie, TLS or SSL or whatever
     CONFIGS = [:server, :domain, :port, :username, :password, :authentication, :environment, :default_from]
     CONFIGS.each do |config|
-      attr_reader config
+      attr_accessor config
     end
     attr_reader :logger
     
@@ -31,6 +31,16 @@ module Mailer
       CONFIGS.each do |config|
         raise Mailer::ConfigError, "#{config} not configured." unless instance_variable_get("@#{config}")
       end
+    end
+    
+    def development?
+      environment.to_s == Mailer::ENVIRONMENT[:development]
+    end
+    def test?
+      environment.to_s == Mailer::ENVIRONMENT[:test]
+    end
+    def production?
+      environment.to_s == Mailer::ENVIRONMENT[:production]
     end
     
   end
