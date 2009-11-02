@@ -1,0 +1,78 @@
+= Mailer
+
+== Description
+
+This is just a little gem to let you configure and send email.  It specifically works
+with Gmail accounts via SSL/TLS.
+
+== Installation
+
+    sudo gem install kelredd-mailer --source http://gemcutter.org
+
+== Usage
+  
+    # Note: this is showing a more complex configuration
+    # only setup or configure what you need or want to
+
+    require 'mailer'
+    
+    mailer = Mailer.new({
+      :server => "smtp.gmail.com",
+      :domain =>  "example.com",
+      :port => 587,
+      :username: "test@example.com",
+      :password: 'secret',
+      :authentication => "plain",        # not required, default is "login"
+      :reply_to: "noreply@example.com",  # not required, default is :username
+      :content_type: "text/html",        # not required, default is "text/plain"
+      :charset: 'UTF-8'                  # not required, default is "UTF-8"
+    }) do
+      
+      # not required: return a Log4r object to setup mailer logging
+      
+      logger = Log4r::Logger.new('email')
+      logger.add(Log4r::StdoutOutputter.new('console')) if development?
+      logger.add(Log4r::FileOutputter.new('fileOutputter', {
+        :filename => "log/email.log",
+        :trunc => false,
+        :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m"))) rescue nil
+      }
+      logger
+      
+    end
+    
+    # send mails with the configured mailer...
+    mailer.send({
+      :to => "test@example.com",
+      :cc => "another@example.com",
+      :bcc => ["one@example.com", "two@example.com"],  # send to multiple addresses
+      :subject => "a message"
+    }) do
+      "a message body"
+    end
+    
+
+== License
+
+Copyright (c) 2009 Kelly Redding
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
