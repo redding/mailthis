@@ -7,6 +7,8 @@ module Mailer
     def initialize(*args)
       super(args)
     end
+    
+    alias_method :latest, :last
         
   end
 end

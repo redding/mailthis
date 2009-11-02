@@ -74,10 +74,80 @@ class MailerTest < Test::Unit::TestCase
       end
     end
 
-    # TODO: build in deliveries framework and test
     should_have_class_methods "deliveries", "deliver_tmail"
     should "have a deliveries cache" do
       assert_kind_of ::Array, Mailer.deliveries
+    end    
+    context "delivering an invalid mail" do
+      setup do
+        @mail = Mailer.build_tmail({})
+      end
+      should "fail" do
+        assert_raises(Mailer::SendError) { Mailer.deliver_tmail(@mail) }
+      end
+    end
+    context "delivering valid mail" do
+      setup do
+        @mail_settings = {
+          :from => ["me@example.com"],
+          :to => ["you@example.com"],
+          :subject => "a message for you"
+        }
+        @mail = Mailer.build_tmail(@mail_settings)
+      end
+      context "in development" do
+        setup do
+          Mailer.config.environment = Mailer.development
+          @out, @err = capture_std_output do 
+            Mailer.deliver_tmail(@mail)
+          end
+        end
+        should "log the mail" do
+          assert @err.string.empty?
+          assert_match "To: #{@mail_settings[:to]}", @out.string
+          assert_match "From: #{@mail_settings[:from]}", @out.string
+          assert_match "Subject: #{@mail_settings[:subject]}", @out.string
+        end
+      end
+      context "in test" do
+        setup do
+          Mailer.config.environment = Mailer.test
+          Mailer.deliveries.clear
+          Mailer.deliver_tmail(@mail)
+        end
+        should "cache the mail" do
+          assert_equal 1, Mailer.deliveries.length
+          sent_mail = Mailer.deliveries.latest
+          assert_equal @mail_settings[:to], sent_mail.to
+          assert_equal @mail_settings[:from], sent_mail.from
+          assert_equal @mail_settings[:subject], sent_mail.subject
+        end
+        
+        # Test helpers tests
+        should "provide a test helper to get the latest sent mail" do
+          assert_equal Mailer.deliveries.latest, latest_sent_mail
+        end
+        
+        # Shoulda macros tests
+        should "provide a test helper for sending mail with from addresses" do
+        end
+        should "provide a test helper for sending mail with reply to addresses" do
+        end
+        should "provide a test helper for sending mail with to addresses" do
+        end
+        should "provide a test helper for sending mail with cc addresses" do
+        end
+        should "provide a test helper for sending mail with bcc addresses" do
+        end
+        should "provide a test helper for sending mail with a specific subject" do
+        end
+        should "provide a test helper for sending mail with matching subject" do
+        end
+        should "provide a test helper for sending mail with matching body" do
+        end
+        should "provide a test helper for sending mail with a content type" do
+        end
+      end
     end
     
     should_have_class_methods "send", "log_tmail"

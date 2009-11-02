@@ -41,6 +41,22 @@ This is just a little gem to let you configure and send email using TMail over N
     }) do     # not required, don't pass .send a block if you don't want your mail to have a body
       "a message body"
     end
+    
+== Testing
+Mailer has some helpers and Shoulda macros to ease testing that emails were delivered with the correct parameters, fields, and content.
+
+Note: This testing only tests that mail objects were built successfully and passed all checks for delivery.  This does not actually send the mails or test sending the mails at the Net::SMTP level.
+
+=== Helpers
+In test_helper.rb or wherever:
+
+    require 'mailer/test_helpers'
+    include Mailer::TestHelpers
+  
+=== Shoulda Macros
+In test_helper.rb or wherever:
+    
+    require 'mailer/shoulda_macros/test_unit'
 
 == License
 

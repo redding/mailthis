@@ -95,7 +95,7 @@ module Mailer
       @@deliveries << mail
     else
       # Log a delivery
-      log_tmail(tmail)
+      log_tmail(mail)
     end
   end
   
@@ -115,10 +115,10 @@ module Mailer
   
   def self.log(level, msg)
     if(msg)
-      if @@config.logger && @@config.logger.respond_to?(level)
+      if MAILER_LOG_AS_PUTS
+        puts "[#{level.to_s.upcase}]: [mailer] #{msg}" if Mailer.config.development?
+      elsif @@config.logger && @@config.logger.respond_to?(level)
         @@config.logger.send(level.to_s, msg) 
-      else
-        puts "[#{level.to_s.upcase}]: [mailer] #{msg}"
       end
     end
   end
