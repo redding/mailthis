@@ -17,6 +17,7 @@ spec = Gem::Specification.new do |s|
   s.files            = %w(README.rdoc Rakefile) + Dir.glob("{lib}/**/*")
   # s.executables    = ['mailer']
   
+  s.add_dependency('log4r')
   s.add_dependency('tmail', '>= 1.2.3.0')
 end
 

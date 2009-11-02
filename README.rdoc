@@ -3,7 +3,7 @@
 == Description
 
 This is just a little gem to let you configure and send email.  It specifically works
-with Gmail accounts via SSL/TLS.
+with Gmail accounts via TLS.
 
 == Installation
 
@@ -16,33 +16,23 @@ with Gmail accounts via SSL/TLS.
 
     require 'mailer'
     
-    mailer = Mailer.new({
-      :server => "smtp.gmail.com",
-      :domain =>  "example.com",
-      :port => 587,
-      :username: "test@example.com",
-      :password: 'secret',
-      :authentication => "plain",        # not required, default is "login"
-      :reply_to: "noreply@example.com",  # not required, default is :username
-      :content_type: "text/html",        # not required, default is "text/plain"
-      :charset: 'UTF-8'                  # not required, default is "UTF-8"
-    }) do
-      
-      # not required: return a Log4r object to setup mailer logging
-      
-      logger = Log4r::Logger.new('email')
-      logger.add(Log4r::StdoutOutputter.new('console')) if development?
-      logger.add(Log4r::FileOutputter.new('fileOutputter', {
-        :filename => "log/email.log",
-        :trunc => false,
-        :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m"))) rescue nil
-      }
-      logger
-      
+    Mailer.configure do |config|
+      config.server = "smtp.gmail.com"
+      config.domain = "example.com"
+      config.port = 587
+      config.username = "test@example.com"
+      config.password = 'secret'
+      config.authentication = "plain"         # not required, default is "login"
+      config.reply_to = "noreply@example.com" # not required, default is :username
+      config.content_type = "text/html"       # not required, default is "text/plain"
+      config.charset = 'UTF-8'                # not required, default is "UTF-8"
+
+      # not required: setup a file to log mails to
+      config.log_file = "log/email.log"
     end
     
     # send mails with the configured mailer...
-    mailer.send({
+    Mailer.send({
       :to => "test@example.com",
       :cc => "another@example.com",
       :bcc => ["one@example.com", "two@example.com"],  # send to multiple addresses
