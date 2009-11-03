@@ -10,7 +10,8 @@ require 'mailer/tls'
 
 module Mailer
   
-  REQUIRED_FIELDS = [:from, :to, :subject]
+  REQUIRED_FIELDS = [:from, :subject]
+  ADDRESS_FIELDS = [:to, :cc, :bcc]
   DEFAULT_CONTENT_TYPE = "text/plain"
   DEFAULT_CHARSET = "UTF-8"
   
@@ -110,6 +111,10 @@ module Mailer
     raise Mailer::SendError, "cannot send, bad mail object given." unless tmail && tmail.kind_of?(TMail::Mail)
     REQUIRED_FIELDS.each do |field|
       raise Mailer::SendError, "cannot send, #{field} not specified." unless tmail.send(field)
+    end
+    # be sure at least one of ADDRESS_FIELDS exists
+    unless ADDRESS_FIELDS.inject(false) {|exist, field| (exist || !tmail.send(field).nil?)}
+      raise Mailer::SendError, "cannot send, no #{ADDRESS_FIELDS.join('/')} specified."
     end
   end
   

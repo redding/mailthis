@@ -89,6 +89,15 @@ class MailerTest < Test::Unit::TestCase
       should "fail" do
         assert_raises(Mailer::SendError) { Mailer.deliver_tmail(@mail) }
       end
+      context "with no address fields" do
+        setup do
+          @mail = Mailer.build_tmail(SIMPLE_MAIL_SETTINGS)
+          @mail.to = nil
+        end
+        should "fail" do
+          assert_raises(Mailer::SendError) { Mailer.deliver_tmail(@mail) }
+        end
+      end
     end
     context "delivering valid mail" do
       setup do
