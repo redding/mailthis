@@ -49,8 +49,6 @@ module Mailer
     mail.body = yield(mail) if block_given?
     mail.body ||= ''
     deliver_tmail(mail)
-    # TODO: support :cc and :bcc as well
-    log(:info, "Sent '#{mail.subject}' to #{mail.to.join(',')}")
     mail
   end
 
@@ -86,23 +84,37 @@ module Mailer
     check_mail(mail)
     @@config.check
     if @@config.production?
-      # deliver using Net::SMTP
-      Net::SMTP.start(@@config.smtp_server, @@config.smtp_port, @@config.smtp_helo_domain, @@config.smtp_username, @@config.smtp_password, @@config.smtp_auth_type) do |server|
-        # TODO: support :cc and :bcc as well
-        mail.to.each {|recipient| server.send_message(mail.to_s, mail.from, recipient) }
+      smtp_start_args = [
+        @@config.smtp_server,
+        @@config.smtp_port,
+        @@config.smtp_helo_domain,
+        @@config.smtp_username,
+        @@config.smtp_password,
+        @@config.smtp_auth_type
+      ]
+      Net::SMTP.start(*smtp_start_args) do |smtp|
+        ADDRESS_FIELDS.each do |field|
+          if (recipients = mail.send(field))
+            recipients.each {|recipient| smtp.send_message(mail.to_s, mail.from, recipient) }
+          end
+        end
       end
     elsif @@config.test?
-      # Add to the deliveries cache
       @@deliveries << mail
-    else
-      # Log a delivery
-      log_tmail(mail)
     end
+    log(:info, "Sent '#{mail.subject}' to #{mail.to ? mail.to.join(', ') : "''"} (#{@@config.environment})")
+    log_tmail(mail)
   end
   
   # Logs a tmail Mail obj delivery
   def self.log_tmail(mail)
-    log(:debug, mail.to_s)
+    log(:debug, [
+      "",
+      "====================================================================",
+      mail.to_s,
+      "====================================================================",
+      ""
+    ].join("\n"))
   end
   
   protected
@@ -120,7 +132,7 @@ module Mailer
   
   def self.log(level, msg)
     if(msg)
-      if MAILER_LOG_AS_PUTS
+      if !@@config.production? && MAILER_LOG_AS_PUTS
         puts "[#{level.to_s.upcase}]: [mailer] #{msg}" if Mailer.config.development?
       elsif @@config.logger && @@config.logger.respond_to?(level)
         @@config.logger.send(level.to_s, msg) 

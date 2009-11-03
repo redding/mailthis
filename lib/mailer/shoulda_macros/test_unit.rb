@@ -68,6 +68,14 @@ module Mailer::ShouldaMacros::TestUnit
       assert_equal(string, subject.content_type, "mail not sent with the content type '#{string}'")
     end
   end
+  
+  def should_send_mail_with_the_settings
+    should "send mail with the settings: #{subject.inspect}" do
+      assert_nothing_raised("error while sending with settings: #{subject.inspect}") do
+        Mailer.send(subject)
+      end
+    end
+  end
     
   def should_not_pass_the_config_check
     should "not pass the config check" do

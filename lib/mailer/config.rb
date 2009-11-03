@@ -12,19 +12,23 @@ module Mailer
     end
     attr_reader :logger
     
-    def initialize(configs={})
+    def initialize()
       @logger = Log4r::Logger.new("[mailer]")
       @logger.add(Log4r::StdoutOutputter.new('console'))
 
-      CONFIGS.each do |config|
-        instance_variable_set("@#{config}", configs[config])
-      end
       @smtp_auth_type ||= :login
       @environment ||= Mailer::ENVIRONMENT[:development]
     end
     
+    def smtp_username=(value)
+      if @default_from.nil? && value && !value.match(/\A([\w\.\-\+]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i).nil?
+        @default_from = value
+      end
+      @smtp_username = value
+    end
+    
     def log_file=(file)
-      @logger.add(Log4r::FileOutputter.new('fileOutputter', :filename => file, :trunc => false, :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m"))) rescue nil
+      @logger.add(Log4r::FileOutputter.new('fileOutputter', :filename => file, :trunc => false, :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m"))) #rescue nil
     end
     
     def check

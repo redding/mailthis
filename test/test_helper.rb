@@ -20,16 +20,6 @@ include Mailer::TestHelpers
 require 'mailer/shoulda_macros/test_unit'
 
 # setup for the test environment
-Mailer.configure do |config|
-  config.smtp_helo_domain = "example.com"
-  config.smtp_server = "smtp.example.com"
-  config.smtp_port = 25
-  config.smtp_username = "test@example.com"
-  config.smtp_password = "secret"
-  config.smtp_auth_type = :plain
-  config.environment = Mailer.test
-end
-
 MAILER_LOG_AS_PUTS = true
 KNOWN_ENVIRONMENTS = ["development", "test", "production"]
 SIMPLE_MAIL_SETTINGS = {
