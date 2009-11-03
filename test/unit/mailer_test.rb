@@ -140,14 +140,10 @@ class MailerTest < Test::Unit::TestCase
           should_be_sent_to(COMPLEX_MAIL_SETTINGS[:to])
           should_be_sent_cc(COMPLEX_MAIL_SETTINGS[:cc])
           should_be_sent_bcc(COMPLEX_MAIL_SETTINGS[:bcc])
-          should "provide a test helper for sending mail with a specific subject" do
-          end
-          should "provide a test helper for sending mail with matching subject" do
-          end
-          should "provide a test helper for sending mail with matching body" do
-          end
-          should "provide a test helper for sending mail with a content type" do
-          end
+          should_be_sent_with_subject(COMPLEX_MAIL_SETTINGS[:subject])
+          should_be_sent_with_subject_containing(COMPLEX_MAIL_SETTINGS[:subject])
+          should_be_sent_with_body_containing(COMPLEX_MAIL_SETTINGS[:body])
+          should_be_sent_with_content_type("text/plain")
         end
       end
     end
