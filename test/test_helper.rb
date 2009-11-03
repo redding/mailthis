@@ -20,6 +20,27 @@ include Mailer::TestHelpers
 require 'mailer/shoulda_macros/test_unit'
 
 # setup for the test environment
+Mailer.configure do |config|
+  config.smtp_helo_domain = "example.com"
+  config.smtp_server = "smtp.example.com"
+  config.smtp_port = 25
+  config.smtp_username = "test@example.com"
+  config.smtp_password = "secret"
+  config.smtp_auth_type = :plain
+  config.environment = Mailer.test
+end
+
 MAILER_LOG_AS_PUTS = true
 KNOWN_ENVIRONMENTS = ["development", "test", "production"]
-Mailer.config.environment = Mailer.test
+SIMPLE_MAIL_SETTINGS = {
+  :from => ["me@example.com"],
+  :to => ["you@example.com"],
+  :subject => "a message for you"
+}
+ADDTL_MAIL_SETTINGS = {
+  :cc => ["cc1@example.com", "cc2@example.com"],
+  :bcc => ["bcc@example.com"],
+  :reply_to => ["i@example.com"],
+  :body => "body passed as field param"
+}
+COMPLEX_MAIL_SETTINGS = SIMPLE_MAIL_SETTINGS.merge(ADDTL_MAIL_SETTINGS)

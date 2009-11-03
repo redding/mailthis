@@ -16,14 +16,14 @@ This is just a little gem to let you configure and send email using TMail over N
     require 'mailer'
     
     Mailer.configure do |config|
-      config.server = "smtp.gmail.com"
-      config.domain = "example.com"
-      config.port = 587
-      config.username = "test@example.com"
-      config.password = 'secret'
-      config.authentication = "plain"         # not required, default is "login"
+      config.smtp_server = "smtp.gmail.com"
+      config.smtp_helo_domain = "example.com"
+      config.smtp_port = 587
+      config.smtp_username = "test@example.com"
+      config.smtp_password = 'secret'
+      config.smtp_auth_type = "plain"         # not required, default is "login"
       config.environment = Mailer.production  # not required, default is Mailer.development
-      config.default_from = "me@example.com"  # not required, default is config.username
+      config.default_from = "me@example.com"  # not required, default is config.smtp_username
 
       # not required: setup a file to log mails to
       config.log_file = "log/email.log"

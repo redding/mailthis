@@ -3,6 +3,17 @@ require File.dirname(__FILE__) + '/../test_helper'
 class MailerTest < Test::Unit::TestCase
 
   context "The Mailer" do
+    setup do
+      Mailer.configure do |config|
+        config.smtp_helo_domain = "example.com"
+        config.smtp_server = "smtp.example.com"
+        config.smtp_port = 25
+        config.smtp_username = "test@example.com"
+        config.smtp_password = "secret"
+        config.smtp_auth_type = :plain
+        config.environment = Mailer.test
+      end
+    end
 
     should_have_class_methods *KNOWN_ENVIRONMENTS
     
@@ -41,11 +52,7 @@ class MailerTest < Test::Unit::TestCase
       end
       context "with the required fields" do
         setup do
-          @required_settings = {
-            :from => ["me@example.com"],
-            :to => ["you@example.com"],
-            :subject => "a message for you"
-          }
+          @required_settings = SIMPLE_MAIL_SETTINGS
         end
         should "work" do
           built = Mailer.build_tmail(@required_settings)
@@ -56,12 +63,7 @@ class MailerTest < Test::Unit::TestCase
         context "and additional TMail fields" do
           setup do
             @addtl_fields = [:cc, :bcc, :reply_to, :body]
-            @addtl_settings = {
-              :cc => ["cc@example.com"],
-              :bcc => ["bcc@example.com"],
-              :reply_to => ["i@example.com"],
-              :body => "body passed as field param"
-            }
+            @addtl_settings = ADDTL_MAIL_SETTINGS
           end
           should "work" do
             built = Mailer.build_tmail(@addtl_settings)
@@ -73,6 +75,8 @@ class MailerTest < Test::Unit::TestCase
 
       end
     end
+
+    should_have_class_methods "send", "log_tmail"
 
     should_have_class_methods "deliveries", "deliver_tmail"
     should "have a deliveries cache" do
@@ -88,11 +92,7 @@ class MailerTest < Test::Unit::TestCase
     end
     context "delivering valid mail" do
       setup do
-        @mail_settings = {
-          :from => ["me@example.com"],
-          :to => ["you@example.com"],
-          :subject => "a message for you"
-        }
+        @mail_settings = SIMPLE_MAIL_SETTINGS
         @mail = Mailer.build_tmail(@mail_settings)
       end
       context "in development" do
@@ -109,7 +109,7 @@ class MailerTest < Test::Unit::TestCase
           assert_match "Subject: #{@mail_settings[:subject]}", @out.string
         end
       end
-      context "in test" do
+      context "in testing" do
         setup do
           Mailer.config.environment = Mailer.test
           Mailer.deliveries.clear
@@ -128,30 +128,30 @@ class MailerTest < Test::Unit::TestCase
           assert_equal Mailer.deliveries.latest, latest_sent_mail
         end
         
-        # Shoulda macros tests
-        should "provide a test helper for sending mail with from addresses" do
-        end
-        should "provide a test helper for sending mail with reply to addresses" do
-        end
-        should "provide a test helper for sending mail with to addresses" do
-        end
-        should "provide a test helper for sending mail with cc addresses" do
-        end
-        should "provide a test helper for sending mail with bcc addresses" do
-        end
-        should "provide a test helper for sending mail with a specific subject" do
-        end
-        should "provide a test helper for sending mail with matching subject" do
-        end
-        should "provide a test helper for sending mail with matching body" do
-        end
-        should "provide a test helper for sending mail with a content type" do
+        context "the latest sent mail" do
+          setup do
+            Mailer.send(COMPLEX_MAIL_SETTINGS)
+          end
+          subject { latest_sent_mail }
+
+          # Shoulda macros tests
+          should_be_sent_from(COMPLEX_MAIL_SETTINGS[:from])
+          should_be_sent_with_reply_to(COMPLEX_MAIL_SETTINGS[:reply_to])
+          should_be_sent_to(COMPLEX_MAIL_SETTINGS[:to])
+          should_be_sent_cc(COMPLEX_MAIL_SETTINGS[:cc])
+          should_be_sent_bcc(COMPLEX_MAIL_SETTINGS[:bcc])
+          should "provide a test helper for sending mail with a specific subject" do
+          end
+          should "provide a test helper for sending mail with matching subject" do
+          end
+          should "provide a test helper for sending mail with matching body" do
+          end
+          should "provide a test helper for sending mail with a content type" do
+          end
         end
       end
     end
     
-    should_have_class_methods "send", "log_tmail"
-            
   end
 
 end

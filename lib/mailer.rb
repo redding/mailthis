@@ -44,7 +44,6 @@ module Mailer
   
   # Macro style helper for sending email based on the Mailer configuration
   def self.send(settings={})
-    @@config.check
     mail = build_tmail(settings)
     mail.body = yield(mail) if block_given?
     mail.body ||= ''
@@ -84,9 +83,10 @@ module Mailer
   # => development?: log mail
   def self.deliver_tmail(mail)
     check_mail(mail)
+    @@config.check
     if @@config.production?
       # deliver using Net::SMTP
-      Net::SMTP.start(@@config.server, @@config.port, @@config.domain, @@config.username, @@config.password, @@config.authentication) do |server|
+      Net::SMTP.start(@@config.smtp_server, @@config.smtp_port, @@config.smtp_helo_domain, @@config.smtp_username, @@config.smtp_password, @@config.smtp_auth_type) do |server|
         # TODO: support :cc and :bcc as well
         mail.to.each {|recipient| server.send_message(mail.to_s, mail.from, recipient) }
       end

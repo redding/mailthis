@@ -5,7 +5,8 @@ module Mailer
 
     # TODO: look into abstracting port settings better based on server access type
     # => ie, TLS or SSL or whatever
-    CONFIGS = [:server, :domain, :port, :username, :password, :authentication, :environment, :default_from]
+    CONFIGS = [:smtp_helo_domain, :smtp_server, :smtp_port, :smtp_username, :smtp_password, :smtp_auth_type, :environment, :default_from]
+    NOT_REQUIRED = [:default_from]
     CONFIGS.each do |config|
       attr_accessor config
     end
@@ -18,9 +19,8 @@ module Mailer
       CONFIGS.each do |config|
         instance_variable_set("@#{config}", configs[config])
       end
-      @authentication ||= :login
+      @smtp_auth_type ||= :login
       @environment ||= Mailer::ENVIRONMENT[:development]
-      @default_from ||= @username
     end
     
     def log_file=(file)
@@ -28,7 +28,7 @@ module Mailer
     end
     
     def check
-      CONFIGS.each do |config|
+      CONFIGS.reject{|c| NOT_REQUIRED.include?(c)}.each do |config|
         raise Mailer::ConfigError, "#{config} not configured." unless instance_variable_get("@#{config}")
       end
     end
