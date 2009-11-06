@@ -132,7 +132,7 @@ module Mailer
   
   def self.log(level, msg)
     if(msg)
-      if !@@config.production? && MAILER_LOG_AS_PUTS
+      if !@@config.production? && defined?(MAILER_LOG_AS_PUTS) && MAILER_LOG_AS_PUTS
         puts "[#{level.to_s.upcase}]: [mailer] #{msg}" if Mailer.config.development?
       elsif @@config.logger && @@config.logger.respond_to?(level)
         @@config.logger.send(level.to_s, msg) 
