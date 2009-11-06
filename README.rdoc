@@ -8,7 +8,27 @@ This is just a little gem to let you configure and send email using TMail over N
 
     sudo gem install kelredd-mailer --source http://gemcutter.org
 
-== Usage
+== Usage Examples
+
+=== A simple configuration
+
+    require 'mailer'
+    
+    Mailer.configure do |config|
+      config.smtp_server = "smtp.gmail.com"
+      config.smtp_helo_domain = "example.com"
+      config.smtp_port = 587
+      config.smtp_username = "test@example.com"
+      config.smtp_password = 'secret'
+      config.environment = Mailer.production  # not required, default is Mailer.development
+    end
+    
+    Mailer.send(:to => "you@example.com", :subject => "a message for you") do
+      "here is a message for you"
+    end
+    
+
+=== A more complex configuration
   
     # Note: this is showing a more complex configuration
     # only setup or configure what you need or want to
@@ -21,12 +41,13 @@ This is just a little gem to let you configure and send email using TMail over N
       config.smtp_port = 587
       config.smtp_username = "test@example.com"
       config.smtp_password = 'secret'
-      config.smtp_auth_type = "plain"         # not required, default is "login"
+      
       config.environment = Mailer.production  # not required, default is Mailer.development
+      config.smtp_auth_type = "plain"         # not required, default is "login"
       config.default_from = "me@example.com"  # not required, default is config.smtp_username
+                                              # if it is a valid email address
 
-      # not required: setup a file to log mails to
-      config.log_file = "log/email.log"
+      config.log_file = "log/email.log"       # not required: setup a file to log mails to
     end
     
     # send mails with the configured mailer...
@@ -34,11 +55,12 @@ This is just a little gem to let you configure and send email using TMail over N
     Mailer.send({
       :from => 'bob@example.com',                      # not required, defaults to config.default_from
       :reply_to => 'bob@me.com',                       # not required
-      :to => "test@example.com",
+      :to => "you@example.com",
       :cc => "Al <another@example.com>",               # send with specific naming
       :bcc => ["one@example.com", "two@example.com"],  # send to multiple addresses
       :subject => "a message"
-    }) do     # not required, don't pass .send a block if you don't want your mail to have a body
+    }) do
+      # not required, don't pass .send a block if you don't want your mail to have a body
       "a message body"
     end
     
@@ -57,6 +79,12 @@ In test_helper.rb or wherever:
 In test_helper.rb or wherever:
     
     require 'mailer/shoulda_macros/test_unit'
+    
+=== Notes / TODOs
+
+It's only live testing and known to be working with SMTP servers requiring TLS (ala Gmail).  I want to extend it to support some auth configuration and switching so that it works with SMTP, SMTPS, and SMTP/TLS.
+
+Right now, the Mailer can only have one configuration.  Maybe like to extend it to create instances of Mailers with different configurations?
 
 == License
 

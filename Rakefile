@@ -5,7 +5,7 @@ require 'rake/testtask'
 require 'lib/mailer/version'
 
 spec = Gem::Specification.new do |s|
-  s.name             = 'mailer'
+  s.name             = 'kelredd-mailer'
   s.version          = Mailer::Version.to_s
   s.has_rdoc         = true
   s.extra_rdoc_files = %w(README.rdoc)
