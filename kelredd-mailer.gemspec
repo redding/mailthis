@@ -2,14 +2,14 @@
 
 Gem::Specification.new do |s|
   s.name = %q{kelredd-mailer}
-  s.version = "0.1.1"
+  s.version = "0.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kelly Redding"]
-  s.date = %q{2009-11-06}
+  s.date = %q{2009-11-17}
   s.email = %q{kelly@kelredd.com}
   s.extra_rdoc_files = ["README.rdoc"]
-  s.files = ["README.rdoc", "Rakefile", "lib/mailer", "lib/mailer/config.rb", "lib/mailer/deliveries.rb", "lib/mailer/exceptions.rb", "lib/mailer/shoulda_macros", "lib/mailer/shoulda_macros/test_unit.rb", "lib/mailer/test_helpers.rb", "lib/mailer/tls.rb", "lib/mailer/version.rb", "lib/mailer.rb"]
+  s.files = ["README.rdoc", "Rakefile", "lib/mailer", "lib/mailer/config.rb", "lib/mailer/deliveries.rb", "lib/mailer/exceptions.rb", "lib/mailer/mailbox.rb", "lib/mailer/pop_ssl.rb", "lib/mailer/shoulda_macros", "lib/mailer/shoulda_macros/test_unit.rb", "lib/mailer/test_helpers.rb", "lib/mailer/tls.rb", "lib/mailer/version.rb", "lib/mailer.rb"]
   s.homepage = %q{http://github.com/kelredd/mailer}
   s.rdoc_options = ["--main", "README.rdoc"]
   s.require_paths = ["lib"]
