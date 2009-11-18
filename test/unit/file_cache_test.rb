@@ -4,14 +4,14 @@ class Mailer::FileCacheTest < Test::Unit::TestCase
 
   context "The Mailer::FileCache" do
     setup do
-      @fc_dir = "~/.mailer_file_test"
+      @fc_dir = "~/.mailer_file_test/file_cache_test"
       @fc_dir_expanded = File.expand_path(@fc_dir)
-      FileUtils.rm_f(@fc_dir_expanded)
+      FileUtils.rm_rf(@fc_dir_expanded)
       @fc = Mailer::FileCache.new(@fc_dir, {})
     end
     subject { @fc }
 
-    should_have_readers *[:path, :name, :mailbox]
+    should_have_readers *[:home, :name, :mailbox]
     
     should "create the cache directory" do 
       assert File.exists?(@fc_dir_expanded)
@@ -23,17 +23,24 @@ class Mailer::FileCacheTest < Test::Unit::TestCase
     
     should_have_instance_methods 'read', 'write', '<<', 'delete'
     should_have_instance_methods 'get_new_mail!', 'clear!', 'entries', 'keys'
-    should_have_instance_methods 'length', 'size', 'empty?', 'each'
+    should_have_instance_methods 'length', 'size', 'empty?', 'each', 'collect'
     
-    
-    should "clear its entries and know it is empty" do
-      assert_nothing_raised do
-        @fc.clear!
+    context "with an entry" do
+      setup do
+        File.open(File.join(@fc_dir_expanded, 'a_file'), 'w+') do |file|
+          file.write "a test file"
+        end
       end
-      assert @fc.empty?
-      assert_equal 0, @fc.length
-      assert_equal [], @fc.entries
-      assert_equal [], @fc.keys
+
+      should "clear its entries and know it is empty" do
+        assert_nothing_raised do
+          @fc.clear!
+        end
+        assert @fc.empty?
+        assert_equal 0, @fc.length
+        assert_equal [], @fc.entries
+        assert_equal [], @fc.keys
+      end
     end
 
     context "with no entries" do

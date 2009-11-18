@@ -147,7 +147,7 @@ Mailer provides a file cache object to abstract caching your mail to the file sy
     
     # work through the cache one at a time using the cache keys
     test_at_example.keys.each do |key|
-      test_at_example[key] do |file|
+      test_at_example.read(key) do |file|
         # do something with the open file stream
       end
       test_at_example.delete(key)
@@ -162,6 +162,7 @@ Mailer provides a file cache object to abstract caching your mail to the file sy
     
     # clear out the entire cache in one fell swoop
     test_at_example.clear!
+    test_at_example.empty?    # => true
     
 == Testing
 

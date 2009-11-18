@@ -6,10 +6,12 @@ module Mailer
   
   class FileCache
     
-    attr_reader :path, :name, :mailbox
+    include ::Enumerable
     
-    def initialize(path, mailbox_configs={})
-      @path = returning File.expand_path(path) do |path|
+    attr_reader :home, :name, :mailbox
+    
+    def initialize(home, mailbox_configs={})
+      @home = returning File.expand_path(home) do |path|
         FileUtils.mkdir_p(path)
         @name = File.basename(path)
         @mailbox = Mailer::Mailbox.new(mailbox_configs)
@@ -27,8 +29,8 @@ module Mailer
       end
     end
     
-    def read(path_or_key)
-      returning self.path(File.basename(path_or_key)) do |path|
+    def read(key)
+      returning self.key_path(key) do |path|
         if File.exists?(path)
           File.open(path, 'r') do |file|
             yield(file) if block_given?
@@ -43,7 +45,7 @@ module Mailer
     # => write(custom_key, mail_obj)
     def write(*args)
       key, mail = get_key_and_mail(args)
-      returning self.path(key) do |path|
+      returning self.key_path(key) do |path|
         File.open(path, 'w+') do |file|
           file.write mail.pop
         end
@@ -52,13 +54,21 @@ module Mailer
     end
     alias_method '<<', 'write'
     
-    def delete(path_or_key)
-      FileUtils.rm_f(self.path(File.basename(path_or_key)))
+    def delete(key)
+      returning self.key_path(key) do |path|
+        FileUtils.rm_rf(path)
+        @entries = nil
+      end
     end
     
     # empties the cache of all entries
     def clear!
-      FileUtils.rm_f(cache_entries_path)
+      returning true do
+        self.keys.each do |key|
+          self.delete(key)
+        end
+        @entries = nil
+      end
     end
     
     def entries
@@ -88,14 +98,14 @@ module Mailer
     
     protected
     
-    def path(key)
-      File.join([@path, key.to_s])
+    def key_path(key)
+      File.join([@home, key.to_s])
     end
     
     private
 
     def cache_entries_path
-      File.join(@path, '*')
+      File.join(@home, '*')
     end
     
     def get_key_and_mail(args)
