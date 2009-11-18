@@ -28,7 +28,14 @@ module Mailer
     end
     
     def log_file=(file)
-      @logger.add(Log4r::FileOutputter.new('fileOutputter', :filename => file, :trunc => false, :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m"))) #rescue nil
+      begin
+        @logger.add(Log4r::FileOutputter.new('fileOutputter', {
+          :filename => file,
+          :trunc => false,
+          :formatter => Log4r::PatternFormatter.new(:pattern => "[%l] %d :: %m")
+        }))
+      rescue Exception => err
+      end
     end
     
     def check

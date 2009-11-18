@@ -78,7 +78,7 @@ module Mailer::ShouldaMacros::TestUnit
   end
     
   def should_not_pass_the_config_check
-    should "not pass the config check" do
+    should "not pass the config check: #{subject.inspect}" do
       assert_raises(Mailer::ConfigError) do
         Mailer.config.check
       end

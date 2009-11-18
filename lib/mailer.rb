@@ -7,6 +7,7 @@ require 'mailer/exceptions'
 require 'mailer/config'
 require 'mailer/deliveries'
 require 'mailer/tls'
+require 'mailer/mailbox'
 
 module Mailer
   
