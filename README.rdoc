@@ -78,25 +78,20 @@ This is just a little gem to let you configure and send email using TMail over N
     
     # open the mailbox, getting a Net:POP3 object
     mailbox.open do |box|
-    
       # box is a Net::POP3 obj
       box.each_mail do |mail|
         puts mail.header
       end
-      
     end
     
     # check any email in mailbox, getting a collection of Net::POPMail objects
     mailbox.check do |email|
-    
       # email is a collection of Net::POPMail objects
       puts email.length
-      
     end
     
     # download said email to files
     mailbox.check do |email|
-    
       # nothing special here, just using Net::POP3 patterns for handling mail
       pop.mails.each_with_index do |mail, index|
         File.open( "inbox/#{index}", 'w+' ) do |file|
@@ -104,11 +99,61 @@ This is just a little gem to let you configure and send email using TMail over N
         end
         mail.delete
       end
-      
     end
 
     # empty the mailbox
     mailbox.empty!
+    
+=== File cacheing your mail
+
+Mailer provides a file cache object to abstract caching your mail to the file system.  You configure it much like you would a mailbox and call 'get_new_mail!' to download and cache new mail to the file system.  The file cache will attempt to delete any mail it downloads from the server.
+
+    # build and configure your file cache
+    test_at_example = Mailer::FileCache.new(~/.mailer/test_at_example, {
+      :server => "pop.server",      # set to whatever needed
+      :port => 995,                 # set to whatever needed
+      :email => "test@example.com", # the inbox to check
+      :password => "secret"         # the email account pop password
+    })
+    
+    
+    # download new mail
+    test_at_example.get_new_mail!
+    
+    
+    # do stuff with the files in the cache via opened File objects
+    # => the cache mixes in Enumerable, returning open File streams
+    test_at_example.each do |file|
+      # some code to read or do stuff with the opened File object
+    end
+    
+    headers = test_at_example.collect do |file|
+      # some code to parse out and return the header info to a string
+    end
+    
+    
+    # if you prefer, just get the collection of file paths, to use as you see fit
+    # => 'entries' is just an array of paths to the files in the cache
+    entry_file_paths = test_at_example.entries
+    
+    
+    # work through the cache one at a time using the cache keys
+    test_at_example.keys.each do |key|
+      test_at_example[key] do |file|
+        # do something with the open file stream
+      end
+      test_at_example.delete(key)
+    end
+    
+    
+    # test if the cache has any entries
+    test_at_example.empty?    # => false
+    
+    # delete entries one at a time
+    test_at_example.delete(path_or_key)
+    
+    # clear out the entire cache in one fell swoop
+    test_at_example.clear!
     
 == Testing
 

@@ -8,6 +8,8 @@ require 'mailer/config'
 require 'mailer/deliveries'
 require 'mailer/tls'
 require 'mailer/mailbox'
+require 'mailer/file_cache'
+
 
 module Mailer
   
