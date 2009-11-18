@@ -27,11 +27,14 @@ module Mailer
       end
     end
     
-    def read(key)
-      key = mail.kind_of?(::Net::POPMail) ? mail.unique_id : mail.to_s
-      returning self.path(mail.unique_id) do |path|
-        File.open(path, 'r') do |file|
-          yield(file) if block_given?
+    def read(path_or_key)
+      returning self.path(File.basename(path_or_key)) do |path|
+        if File.exists?(path)
+          File.open(path, 'r') do |file|
+            yield(file) if block_given?
+          end
+        else
+          raise ArgumentError, "the file '#{path}' does not exists"
         end
       end
     end
@@ -49,7 +52,7 @@ module Mailer
     end
     alias_method '<<', 'write'
     
-    def remove(path_or_key)
+    def delete(path_or_key)
       FileUtils.rm_f(self.path(File.basename(path_or_key)))
     end
     
@@ -59,7 +62,7 @@ module Mailer
     end
     
     def entries
-      @entries ||= Dir[self.cache_entries_path]
+      @entries ||= Dir[cache_entries_path]
     end
     
     def keys
@@ -86,13 +89,13 @@ module Mailer
     protected
     
     def path(key)
-      File.join([@home, key.to_s])
+      File.join([@path, key.to_s])
     end
     
     private
 
     def cache_entries_path
-      File.join(@home, '*')
+      File.join(@path, '*')
     end
     
     def get_key_and_mail(args)
