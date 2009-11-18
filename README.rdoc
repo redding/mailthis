@@ -2,7 +2,7 @@
 
 == Description
 
-This is just a little gem to let you configure and send email using TMail over Net:SMTP.
+This is just a little gem to let you configure and send email using TMail over Net:SMTP.  It also lets you check email using Net::POP3.
 
 == Installation
 
@@ -10,7 +10,7 @@ This is just a little gem to let you configure and send email using TMail over N
 
 == Usage Examples
 
-=== A simple configuration
+=== Sending mail: A simple configuration
 
     require 'mailer'
     
@@ -28,7 +28,7 @@ This is just a little gem to let you configure and send email using TMail over N
     end
     
 
-=== A more complex configuration
+=== Sending mail: A more complex configuration
   
     # Note: this is showing a more complex configuration
     # only setup or configure what you need or want to
@@ -63,19 +63,68 @@ This is just a little gem to let you configure and send email using TMail over N
       # not required, don't pass .send a block if you don't want your mail to have a body
       "a message body"
     end
+
+=== Checking mail
+
+    mailbox = Mailer::Mailbox.new({
+      :server => "pop.server",      # set to whatever needed
+      :port => 995,                 # set to whatever needed
+      :email => "test@example.com", # the inbox to check
+      :password => "secret"         # the email account pop password
+    })
+    
+    # check if you have mail
+    mailbox.empty?
+    
+    # open the mailbox, getting a Net:POP3 object
+    mailbox.open do |box|
+    
+      # box is a Net::POP3 obj
+      box.each_mail do |mail|
+        puts mail.header
+      end
+      
+    end
+    
+    # check any email in mailbox, getting a collection of Net::POPMail objects
+    mailbox.check do |email|
+    
+      # email is a collection of Net::POPMail objects
+      puts email.length
+      
+    end
+    
+    # download said email to files
+    mailbox.check do |email|
+    
+      # nothing special here, just using Net::POP3 patterns for handling mail
+      pop.mails.each_with_index do |mail, index|
+        File.open( "inbox/#{index}", 'w+' ) do |file|
+          f.write mail.pop
+        end
+        mail.delete
+      end
+      
+    end
+
+    # empty the mailbox
+    mailbox.empty!
     
 == Testing
+
 Mailer has some helpers and Shoulda macros to ease testing that emails were delivered with the correct parameters, fields, and content.
 
 Note: This testing only tests that mail objects were built successfully and passed all checks for delivery.  This does not actually send the mails or test sending the mails at the Net::SMTP level.
 
 === Helpers
+
 In test_helper.rb or wherever:
 
     require 'mailer/test_helpers'
     include Mailer::TestHelpers
   
 === Shoulda Macros
+
 In test_helper.rb or wherever:
     
     require 'mailer/shoulda_macros/test_unit'
@@ -85,6 +134,8 @@ In test_helper.rb or wherever:
 It's only live testing and known to be working with SMTP servers requiring TLS (ala Gmail).  I want to extend it to support some auth configuration and switching so that it works with SMTP, SMTPS, and SMTP/TLS.
 
 Right now, the Mailer can only have one configuration.  Maybe like to extend it to create instances of Mailers with different configurations?
+
+I want to add helpers for downloading email with attachments and storing in memory as a string and file streams.  Maybe?
 
 == License
 
