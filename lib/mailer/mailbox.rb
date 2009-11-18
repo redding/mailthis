@@ -1,5 +1,5 @@
 require 'mailer/exceptions'
-require 'mailer/pop_ssl'
+require 'mailer/ssl/pop'
 
 module Mailer
   

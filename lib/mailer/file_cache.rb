@@ -1,4 +1,6 @@
 require 'useful/ruby_extensions/object'
+
+require 'mailer/exceptions'
 require 'mailer/mailbox'
 
 module Mailer

@@ -6,10 +6,11 @@ require 'log4r'
 require 'mailer/exceptions'
 require 'mailer/config'
 require 'mailer/deliveries'
-require 'mailer/tls'
 require 'mailer/mailbox'
 require 'mailer/file_cache'
 
+# move SMTP code into abstracted SMTP class that is proxied by the Mailer module
+require 'mailer/ssl/tls'
 
 module Mailer
   
