@@ -1,5 +1,4 @@
 require 'useful/ruby_extensions/object'
-
 require 'mailer/exceptions'
 require 'mailer/mailbox'
 
@@ -28,7 +27,7 @@ module Mailer
       end
     end
     
-    def [](mail)
+    def read(key)
       key = mail.kind_of?(::Net::POPMail) ? mail.unique_id : mail.to_s
       returning self.path(mail.unique_id) do |path|
         File.open(path, 'r') do |file|
@@ -36,11 +35,12 @@ module Mailer
         end
       end
     end
-    alias_method '[]', 'read'
-    
-    def <<(mail)
-      validate_mail(mail)
-      returning self.path(mail.unique_id) do |path|
+     
+    # => write(mail_obj)
+    # => write(custom_key, mail_obj)
+    def write(*args)
+      key, mail = get_key_and_mail(args)
+      returning self.path(key) do |path|
         File.open(path, 'w+') do |file|
           file.write mail.pop
         end
@@ -69,7 +69,7 @@ module Mailer
     def length
       self.entries.length
     end
-    alias_method :length, :size
+    alias_method 'size', 'length'
     
     def empty?
       self.entries.empty?
@@ -77,7 +77,7 @@ module Mailer
     
     def each
       self.keys.each do |key|
-        self[key] do |file|
+        self.read(key) do |file|
           yield(file) if block_given?
         end
       end
@@ -95,16 +95,30 @@ module Mailer
       File.join(@home, '*')
     end
     
-    def validate_mail(mail)
-      unless mail.kind_of?(::Net::POPMail)
-        raise ArgumentError, "trying to write '#{mail.class.to_s}' object to the cache.  You can only write 'Net::POPMail' objects"
-      end
-      unless mail.respond_to?(:unique_id) && !mail.unique_id.blank?
-        raise ArgumentError, "this mail has an invalid unique_id"
+    def get_key_and_mail(args)
+      returning [] do |key_and_mail|
+        case args.length
+        when 1
+          mail = args.first
+        when 2
+          key = args.first
+          mail = args.last
+        else
+          raise ArgumentError, "invalid write arguements '#{args.inspect}'"
+        end
+        unless mail.kind_of?(::Net::POPMail)
+          raise ArgumentError, "trying to write '#{mail.class.to_s}' object to the cache.  You can only write 'Net::POPMail' objects"
+        end
+        if key.blank?
+          unless mail.respond_to?(:unique_id) && !mail.unique_id.blank?
+            raise ArgumentError, "this mail has an invalid unique_id"
+          end
+          key = mail.unique_id
+        end
+        key_and_mail << key
+        key_and_mail << mail
       end
     end
-      
-    end
-    
+   
   end
 end

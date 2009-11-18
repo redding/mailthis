@@ -131,10 +131,18 @@ Mailer provides a file cache object to abstract caching your mail to the file sy
       # some code to parse out and return the header info to a string
     end
     
+    # or even better, build TMail::Mail objects from the mail files
+    tmails = test_at_example.collect do |file|
+      TMail::Mail.parse(file.read)
+    end
+    
     
     # if you prefer, just get the collection of file paths, to use as you see fit
     # => 'entries' is just an array of paths to the files in the cache
     entry_file_paths = test_at_example.entries
+    tmails = test_at_example.entries.collect do |path|
+      TMail::Mail.load(path)
+    end
     
     
     # work through the cache one at a time using the cache keys

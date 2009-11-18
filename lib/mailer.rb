@@ -6,6 +6,7 @@ require 'log4r'
 require 'mailer/exceptions'
 require 'mailer/config'
 require 'mailer/deliveries'
+
 require 'mailer/mailbox'
 require 'mailer/file_cache'
 
