@@ -153,6 +153,10 @@ Mailer provides a file cache object to abstract caching your mail to the file sy
       test_at_example.delete(key)
     end
     
+    # or yet even better, get Mailer::Email object (which are just special TMail::Mail objects)
+    emails = test_at_example.emails
+    email = test_at_example.email(test_at_example.keys.first)
+    
     
     # test if the cache has any entries
     test_at_example.empty?    # => false
