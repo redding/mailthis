@@ -22,7 +22,7 @@ class Mailer::FileCacheTest < Test::Unit::TestCase
     end
     
     should_have_instance_methods 'read', 'write', '<<', 'delete'
-    should_have_instance_methods 'get_new_mail!', 'clear!', 'entries', 'keys'
+    should_have_instance_methods 'get_new_mail!', 'clear!', 'entries', 'keys', 'emails'
     should_have_instance_methods 'length', 'size', 'empty?', 'each', 'collect'
     
     context "with an entry" do
@@ -40,6 +40,7 @@ class Mailer::FileCacheTest < Test::Unit::TestCase
         assert_equal 0, @fc.length
         assert_equal [], @fc.entries
         assert_equal [], @fc.keys
+        assert_equal [], @fc.emails
       end
     end
 

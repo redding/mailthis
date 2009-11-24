@@ -9,6 +9,7 @@ require 'mailer/deliveries'
 
 require 'mailer/mailbox'
 require 'mailer/file_cache'
+require 'mailer/email'
 
 # move SMTP code into abstracted SMTP class that is proxied by the Mailer module
 require 'mailer/ssl/tls'

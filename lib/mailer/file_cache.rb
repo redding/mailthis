@@ -79,6 +79,12 @@ module Mailer
       self.entries.collect{|file| File.basename(file)}
     end
     
+    def emails
+      self.collect do |file|
+        Mailer::Email.parse(file.read)
+      end
+    end
+    
     def length
       self.entries.length
     end
