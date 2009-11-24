@@ -1,6 +1,7 @@
 require 'useful/ruby_extensions/object'
 require 'mailer/exceptions'
 require 'mailer/mailbox'
+require 'mailer/email'
 
 module Mailer
   
@@ -38,6 +39,12 @@ module Mailer
         else
           raise ArgumentError, "the file '#{path}' does not exists"
         end
+      end
+    end
+    
+    def email(key)
+      read(key) do |file|
+        Mailer::Email.parse(file.read)
       end
     end
      

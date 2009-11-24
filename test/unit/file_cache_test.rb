@@ -21,7 +21,7 @@ class Mailer::FileCacheTest < Test::Unit::TestCase
       assert_equal File.basename(@fc_dir_expanded), @fc.name
     end
     
-    should_have_instance_methods 'read', 'write', '<<', 'delete'
+    should_have_instance_methods 'read', 'write', '<<', 'delete', 'email'
     should_have_instance_methods 'get_new_mail!', 'clear!', 'entries', 'keys', 'emails'
     should_have_instance_methods 'length', 'size', 'empty?', 'each', 'collect'
     
