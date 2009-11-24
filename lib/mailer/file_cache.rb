@@ -31,14 +31,13 @@ module Mailer
     end
     
     def read(key)
-      returning self.key_path(key) do |path|
-        if File.exists?(path)
-          File.open(path, 'r') do |file|
-            yield(file) if block_given?
-          end
-        else
-          raise ArgumentError, "the file '#{path}' does not exists"
+      path = self.key_path(key)
+      if File.exists?(path)
+        File.open(path, 'r') do |file|
+          yield(file) if block_given?
         end
+      else
+        raise ArgumentError, "the file '#{path}' does not exists"
       end
     end
     
