@@ -20,6 +20,8 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('log4r')
   s.add_dependency('tmail', '>= 1.2.3.0')
   s.add_dependency('kelredd-useful', '>= 0.2.0')
+
+  s.add_development_dependency("shoulda", [">= 2.10.2"])
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
