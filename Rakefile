@@ -19,7 +19,7 @@ spec = Gem::Specification.new do |s|
   
   s.add_dependency('log4r')
   s.add_dependency('tmail', '>= 1.2.3.0')
-  s.add_dependency('kelredd-useful', '~> 0.2.0')
+  s.add_dependency('kelredd-useful', '>= 0.2.0')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -55,11 +55,4 @@ task :gemspec do
   file = File.dirname(__FILE__) + "/#{spec.name}.gemspec"
   File.open(file, 'w') {|f| f << spec.to_ruby }
   puts "Created gemspec: #{file}"
-end
-
-require 'cucumber'
-require 'cucumber/rake/task'
-
-Cucumber::Rake::Task.new(:features) do |t|
-  t.cucumber_opts = "test/features --format pretty" 
 end

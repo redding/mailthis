@@ -95,7 +95,7 @@ This is just a little gem to let you configure and send email using TMail over N
       # nothing special here, just using Net::POP3 patterns for handling mail
       pop.mails.each_with_index do |mail, index|
         File.open( "inbox/#{index}", 'w+' ) do |file|
-          f.write mail.pop
+          file.write mail.pop
         end
         mail.delete
       end
@@ -197,7 +197,7 @@ I want to add helpers for downloading email with attachments and storing in memo
 
 == License
 
-Copyright (c) 2009 Kelly Redding
+Copyright (c) 2009-2010 Kelly Redding
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

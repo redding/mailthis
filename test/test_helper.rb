@@ -4,6 +4,7 @@ $:.reject! { |e| e.include? 'TextMate' }
 require 'rubygems'
 require 'test/unit'
 require 'shoulda/test_unit'
+require 'fileutils'
 
 # gem install kelredd-useful --source http://gemcutter.org
 require 'useful/shoulda_macros/test_unit'
