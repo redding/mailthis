@@ -1,5 +1,6 @@
 require 'ns-options/proxy'
 require 'mailthis/exceptions'
+require 'mailthis/outgoing_email'
 
 module Mailthis
 
@@ -29,8 +30,8 @@ module Mailthis
       self # for chaining
     end
 
-    def send_mail
-      raise NotImplementedError
+    def send_mail(message)
+      OutgoingEmail.new(self, message).deliver
     end
 
     class NullLogger
