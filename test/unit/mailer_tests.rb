@@ -1,162 +1,137 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'assert'
+require 'mailthis/mailer'
 
-class MailerTest < Test::Unit::TestCase
+require 'mailthis/exceptions'
 
-  context "The Mailer" do
+class Mailthis::Mailer
+
+  class UnitTests < Assert::Context
+    desc "Mailthis::Mailer"
     setup do
-      Mailer.configure do |config|
-        config.smtp_helo_domain = "example.com"
-        config.smtp_server = "smtp.example.com"
-        config.smtp_port = 25
-        config.smtp_username = "test@example.com"
-        config.smtp_password = "secret"
-        config.smtp_auth_type = :plain
-        config.environment = Mailer.test
+      @mailer = Mailthis::Mailer.new
+    end
+    subject{ @mailer }
+
+    should have_imeths :smtp_helo, :smtp_server, :smtp_port
+    should have_imeths :smtp_user, :smtp_pw, :smtp_auth
+    should have_imeths :from, :logger
+    should have_imeths :validate!, :send_mail
+
+    should "know its smtp settings" do
+      { :smtp_helo   => 'example.com',
+        :smtp_server => 'smtp.example.com',
+        :smtp_port   => 25,
+        :smtp_user   => 'test@example.com',
+        :smtp_pw     => 'secret'
+      }.each do |setting, val|
+        assert_nil subject.send(setting)
+
+        subject.send(setting, val)
+        assert_equal val, subject.send(setting)
       end
     end
 
-    should_have_class_methods *KNOWN_ENVIRONMENTS
-    
-    should_have_class_methods "configure", "config"
-    should "be configurable" do
-      assert_kind_of Mailer::Config, Mailer.config
-      env = "test"
-      Mailer.configure do |config|
-        config.environment = env
-      end
-      assert_equal env, Mailer.config.environment
-    end
-    
-    should_have_class_methods "build_tmail"
-    context "when building TMail" do
-      should "return TMail::Mail objects" do
-        assert_kind_of TMail::Mail, Mailer.build_tmail({})
-      end
-      context "with a configured default from" do
-        setup do
-          @def_from = ["me@example.com"]
-          Mailer.config.default_from = @def_from
-        end
-        should "default the from field" do
-          assert_equal @def_from, Mailer.build_tmail({}).from
-        end
-      end
-      should "default the date field" do
-        assert_equal Time.now.day, Mailer.build_tmail({}).date.day
-      end
-      should "default the content type field" do
-        assert_equal Mailer::DEFAULT_CONTENT_TYPE, Mailer.build_tmail({}).content_type
-      end
-      should "default the charset field" do
-        assert_equal Mailer::DEFAULT_CHARSET, Mailer.build_tmail({}).charset
-      end
-      context "with the required fields" do
-        setup do
-          @required_settings = SIMPLE_MAIL_SETTINGS
-        end
-        should "work" do
-          built = Mailer.build_tmail(@required_settings)
-          Mailer::REQUIRED_FIELDS.each do |field|
-            assert_equal @required_settings[field], built.send(field)
-          end
-        end
-        context "and additional TMail fields" do
-          setup do
-            @addtl_fields = [:cc, :bcc, :reply_to, :body]
-            @addtl_settings = ADDTL_MAIL_SETTINGS
-          end
-          should "work" do
-            built = Mailer.build_tmail(@addtl_settings)
-            @addtl_fields.each do |field|
-              assert_equal @addtl_settings[field], built.send(field)
-            end
-          end
-        end
+    should "use `\"login\"` as the auth by default" do
+      assert_equal "login", subject.smtp_auth
 
-      end
+      subject.smtp_auth 'plain'
+      assert_equal 'plain', subject.smtp_auth
     end
 
-    should_have_class_methods "send", "log_tmail"
+    should "use smtp_user as the from by default" do
+      assert_nil subject.from
 
-    should_have_class_methods "deliveries", "deliver_tmail"
-    should "have a deliveries cache" do
-      assert_kind_of ::Array, Mailer.deliveries
-    end    
-    context "delivering an invalid mail" do
-      setup do
-        @mail = Mailer.build_tmail({})
-      end
-      should "fail" do
-        assert_raise(Mailer::SendError) { Mailer.deliver_tmail(@mail) }
-      end
-      context "with no address fields" do
-        setup do
-          @mail = Mailer.build_tmail(SIMPLE_MAIL_SETTINGS)
-          @mail.to = nil
-        end
-        should "fail" do
-          assert_raise(Mailer::SendError) { Mailer.deliver_tmail(@mail) }
-        end
+      subject.smtp_user 'user'
+      assert_equal 'user', subject.from
+    end
+
+    should "allow overriding the from" do
+      subject.from 'a-user'
+      assert_equal 'a-user', subject.from
+    end
+
+    should "know its logger" do
+      assert_kind_of Mailthis::Mailer::NullLogger, subject.logger
+    end
+
+  end
+
+  class ValidationTests < UnitTests
+    desc "when validating"
+    setup do
+      @invalid = Mailthis::Mailer.new do
+        smtp_helo   "example.com"
+        smtp_server "smtp.example.com"
+        smtp_port   25
+        smtp_user   "test@example.com"
+        smtp_pw     "secret"
+        smtp_auth   :plain
       end
     end
-    context "delivering valid mail" do
-      setup do
-        @mail_settings = SIMPLE_MAIL_SETTINGS
-        @mail = Mailer.build_tmail(@mail_settings)
-      end
-      context "in development" do
-        setup do
-          Mailer.config.environment = Mailer.development
-          @out, @err = capture_std_output do 
-            Mailer.deliver_tmail(@mail)
-          end
-        end
-        should "log the mail" do
-          assert @err.string.empty?
-          assert_match "To: #{@mail_settings[:to]}", @out.string
-          assert_match "From: #{@mail_settings[:from]}", @out.string
-          assert_match "Subject: #{@mail_settings[:subject]}", @out.string
-        end
-      end
-      context "in testing" do
-        setup do
-          Mailer.config.environment = Mailer.test
-          Mailer.deliveries.clear
-          Mailer.deliver_tmail(@mail)
-        end
-        should "cache the mail" do
-          assert_equal 1, Mailer.deliveries.length
-          sent_mail = Mailer.deliveries.latest
-          assert_equal @mail_settings[:to], sent_mail.to
-          assert_equal @mail_settings[:from], sent_mail.from
-          assert_equal @mail_settings[:subject], sent_mail.subject
-        end
-        
-        # Test helpers tests
-        should "provide a test helper to get the latest sent mail" do
-          assert_equal Mailer.deliveries.latest, latest_sent_mail
-        end
-        
-        context "the latest sent mail" do
-          setup do
-            Mailer.send(COMPLEX_MAIL_SETTINGS)
-          end
-          subject { latest_sent_mail }
+    subject{ @invalid }
 
-          # Shoulda macros tests
-          should_be_sent_from(COMPLEX_MAIL_SETTINGS[:from])
-          should_be_sent_with_reply_to(COMPLEX_MAIL_SETTINGS[:reply_to])
-          should_be_sent_to(COMPLEX_MAIL_SETTINGS[:to])
-          should_be_sent_cc(COMPLEX_MAIL_SETTINGS[:cc])
-          should_be_sent_bcc(COMPLEX_MAIL_SETTINGS[:bcc])
-          should_be_sent_with_subject(COMPLEX_MAIL_SETTINGS[:subject])
-          should_be_sent_with_subject_containing(COMPLEX_MAIL_SETTINGS[:subject])
-          should_be_sent_with_body_containing(COMPLEX_MAIL_SETTINGS[:body])
-          should_be_sent_with_content_type("text/plain")
-        end
+    should "not complain if all settings are in place" do
+      assert_valid
+    end
+
+    should "return itself when validating" do
+      assert_same subject, subject.validate!
+    end
+
+    should "be invalid if missing the helo domain" do
+      subject.smtp_helo = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the server" do
+      subject.smtp_server = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the port" do
+      subject.smtp_port = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the user" do
+      subject.smtp_user = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the pw" do
+      subject.smtp_pw = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the auth" do
+      subject.smtp_auth = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the from" do
+      subject.from = nil
+      assert_invalid
+    end
+
+    should "be invalid if missing the logger" do
+      subject.logger = nil
+      assert_invalid
+    end
+
+    private
+
+    def assert_valid
+      assert_nothing_raised do
+        subject.validate!
       end
     end
-    
+
+    def assert_invalid
+      assert_raises(Mailthis::MailerError) do
+        subject.validate!
+      end
+    end
+
   end
 
 end

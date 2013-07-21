@@ -20,6 +20,7 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency("assert", ["~> 2.0"])
 
-  gem.add_dependency("mail", ["~> 2.5"])
+  gem.add_dependency("ns-options", ["~> 1.1", ">= 1.1.4"])
+  gem.add_dependency("mail",       ["~> 2.5"])
 
 end
