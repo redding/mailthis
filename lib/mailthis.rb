@@ -1,8 +1,12 @@
+require 'mailthis/version'
+require 'mailthis/exceptions'
+require 'mailthis/mailer'
+
 module Mailthis
 
-  MailerError = Class.new(StandardError)
-  ConfigError = Class.new(MailerError)
-  SendError   = Class.new(MailerError)
+  def self.mailer(*args, &block)
+    Mailer.new(*args, &block).validate!
+  end
 
 end
 
