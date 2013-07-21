@@ -1,6 +1,7 @@
 require 'assert'
 require 'mailthis/mailer'
 
+require 'test/support/factory'
 require 'mailthis/exceptions'
 
 class Mailthis::Mailer
@@ -130,6 +131,26 @@ class Mailthis::Mailer
       assert_raises(Mailthis::MailerError) do
         subject.validate!
       end
+    end
+
+  end
+
+  class SendMailTests < UnitTests
+    desc "when sending mail"
+    setup do
+      @message = Factory.message(:from => "me@example.com")
+      @mailer  = Factory.mailer
+      @mailer.logger = Factory.logger(@out = "")
+
+      @sent_msg = @mailer.send_mail(@message)
+    end
+
+    should "return the message that was sent" do
+      assert_same @message, @sent_msg
+    end
+
+    should "log that the message was sent" do
+      assert_not_empty @out
     end
 
   end

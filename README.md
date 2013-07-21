@@ -53,33 +53,24 @@ GMAIL.send_mail({
 })
 ```
 
-## Testing
+## Installation
 
-TODO: deal with this.
+Add this line to your application's Gemfile:
 
-Mailer has some helpers and Shoulda macros to ease testing that emails were delivered with the correct parameters, fields, and content.
+    gem 'whysoslow'
 
-Note: This testing only tests that mail objects were built successfully and passed all checks for delivery.  This does not actually send the mails or test sending the mails at the Net::SMTP level.
+And then execute:
 
-### Helpers
+    $ bundle
 
-In test_helper.rb or wherever:
+Or install it yourself as:
 
-    require 'mailer/test_helpers'
-    include Mailer::TestHelpers
+    $ gem install whysoslow
 
-### TODO: remove this
-=== Shoulda Macros
+## Contributing
 
-In test_helper.rb or wherever:
-
-    require 'mailer/shoulda_macros/test_unit'
-
-### TODO: address these then remove this
-=== Notes / TODOs
-
-It's only live testing and known to be working with SMTP servers requiring TLS (ala Gmail).  I want to extend it to support some auth configuration and switching so that it works with SMTP, SMTPS, and SMTP/TLS.
-
-Right now, the Mailer can only have one configuration.  Maybe like to extend it to create instances of Mailers with different configurations?
-
-I want to add helpers for downloading email with attachments and storing in memory as a string and file streams.  Maybe?
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
