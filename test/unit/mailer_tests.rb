@@ -16,7 +16,7 @@ class Mailthis::Mailer
     should have_imeths :smtp_helo, :smtp_server, :smtp_port
     should have_imeths :smtp_user, :smtp_pw, :smtp_auth
     should have_imeths :from, :logger
-    should have_imeths :validate!, :send_mail
+    should have_imeths :validate!, :deliver
 
     should "know its smtp settings" do
       { :smtp_helo   => 'example.com',
@@ -142,7 +142,7 @@ class Mailthis::Mailer
       @mailer  = Factory.mailer
       @mailer.logger = Factory.logger(@out = "")
 
-      @sent_msg = @mailer.send_mail(@message)
+      @sent_msg = @mailer.deliver(@message)
     end
 
     should "return the message that was sent" do
@@ -154,7 +154,7 @@ class Mailthis::Mailer
     end
 
     should "build the message from the given block" do
-      built_msg = @mailer.send_mail do
+      built_msg = @mailer.deliver do
         from    'me@example.com'
         to      'you@example.com'
         subject 'a message'
@@ -167,7 +167,7 @@ class Mailthis::Mailer
     end
 
     should "task a message and apply the given block" do
-      built_msg = @mailer.send_mail(Factory.message) do
+      built_msg = @mailer.deliver(Factory.message) do
         from 'me@example.com'
       end
 

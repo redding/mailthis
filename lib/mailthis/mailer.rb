@@ -31,7 +31,7 @@ module Mailthis
       self # for chaining
     end
 
-    def send_mail(message = nil, &block)
+    def deliver(message = nil, &block)
       (message || ::Mail.new).tap do |msg|
         msg.instance_eval(&block) if block
         OutgoingEmail.new(self, msg).deliver

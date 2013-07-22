@@ -19,7 +19,7 @@ GMAIL = Mailthis.mailer do
   smtp_pw     'secret'
 end
 
-GMAIL.send_mail do
+GMAIL.deliver do
   subject 'a message for you'
   to      'you@example.com'
   body    'here is a message for you'
@@ -52,7 +52,7 @@ msg.bcc      = ["one@example.com", "Two <two@example.com>"],
 msg.subject  = "a message",
 msg.body     = "a message body"
 
-GMAIL.send_mail(msg)
+GMAIL.deliver(msg)
 ```
 
 ## Installation
