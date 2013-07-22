@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version     = Mailthis::VERSION
   gem.authors     = ["Kelly Redding"]
   gem.email       = ["kelly@kellyredding.com"]
-  gem.description = %q{A little mailer in Ruby}
-  gem.summary     = %q{A little mailer in Ruby}
+  gem.description = %q{a simple mailer for ruby}
+  gem.summary     = %q{a simple mailer for ruby}
   gem.homepage    = "http://github.com/kellyredding/mailthis"
   gem.license     = 'MIT'
 
