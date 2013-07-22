@@ -2,7 +2,7 @@
 
 ## Description
 
-This is just a little gem to let you configure and send email using Mail over Net:SMTP.  It also lets you check email using Net::POP3.
+Configure and send email using Mail (https://github.com/mikel/mail) over Net:SMTP.
 
 ## Usage
 
@@ -19,9 +19,10 @@ GMAIL = Mailthis.mailer do
   smtp_pw     'secret'
 end
 
-GMAIL.send_mail("a message for you", :to => "you@example.com") do
-  # the return value of the block is used as the email body
-  "here is a message for you"
+GMAIL.deliver do
+  subject 'a message for you'
+  to      'you@example.com'
+  body    'here is a message for you'
 end
 ```
 
@@ -42,15 +43,16 @@ GMAIL = Mailthis.mailer do
   logger    Logger.new("log/email.log") # (optional) default: no logger, no logging
 end
 
-GMAIL.send_mail({
-  :from     => 'bob@example.com',       # (optional) default: mailer #from
-  :reply_to => 'bob@me.com',            # (optional) default: self #from
-  :to       => "you@example.com",
-  :cc       => "Another <another@example.com>",
-  :bcc      => ["one@example.com", "Two <two@example.com>"],
-  :subject  => "a message",
-  :body     => "a message body"
-})
+msg = Mail.new
+msg.from     = 'bob@example.com',       # (optional) default: mailer #from
+msg.reply_to = 'bob@me.com',            # (optional) default: self #from
+msg.to       = "you@example.com",
+msg.cc       = "Another <another@example.com>",
+msg.bcc      = ["one@example.com", "Two <two@example.com>"],
+msg.subject  = "a message",
+msg.body     = "a message body"
+
+GMAIL.deliver(msg)
 ```
 
 ## Installation

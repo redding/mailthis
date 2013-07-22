@@ -1,4 +1,5 @@
 require 'ns-options/proxy'
+require 'mail'
 require 'mailthis/exceptions'
 require 'mailthis/outgoing_email'
 
@@ -30,8 +31,11 @@ module Mailthis
       self # for chaining
     end
 
-    def send_mail(message)
-      OutgoingEmail.new(self, message).deliver
+    def deliver(message = nil, &block)
+      (message || ::Mail.new).tap do |msg|
+        msg.instance_eval(&block) if block
+        OutgoingEmail.new(self, msg).deliver
+      end
     end
 
     class NullLogger

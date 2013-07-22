@@ -16,7 +16,7 @@ class Mailthis::Mailer
     should have_imeths :smtp_helo, :smtp_server, :smtp_port
     should have_imeths :smtp_user, :smtp_pw, :smtp_auth
     should have_imeths :from, :logger
-    should have_imeths :validate!, :send_mail
+    should have_imeths :validate!, :deliver
 
     should "know its smtp settings" do
       { :smtp_helo   => 'example.com',
@@ -142,7 +142,7 @@ class Mailthis::Mailer
       @mailer  = Factory.mailer
       @mailer.logger = Factory.logger(@out = "")
 
-      @sent_msg = @mailer.send_mail(@message)
+      @sent_msg = @mailer.deliver(@message)
     end
 
     should "return the message that was sent" do
@@ -151,6 +151,30 @@ class Mailthis::Mailer
 
     should "log that the message was sent" do
       assert_not_empty @out
+    end
+
+    should "build the message from the given block" do
+      built_msg = @mailer.deliver do
+        from    'me@example.com'
+        to      'you@example.com'
+        subject 'a message'
+      end
+
+      assert_kind_of ::Mail::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
+    end
+
+    should "task a message and apply the given block" do
+      built_msg = @mailer.deliver(Factory.message) do
+        from 'me@example.com'
+      end
+
+      assert_kind_of ::Mail::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
     end
 
   end
