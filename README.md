@@ -59,7 +59,7 @@ GMAIL.deliver(msg)
 
 Add this line to your application's Gemfile:
 
-    gem 'whysoslow'
+    gem 'mailthis'
 
 And then execute:
 
@@ -67,7 +67,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install whysoslow
+    $ gem install mailthis
 
 ## Contributing
 
