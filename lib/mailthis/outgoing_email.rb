@@ -40,7 +40,7 @@ module Mailthis
     def deliver
       self.validate!
       @mailer.validate!
-      self.deliver_smtp if ENV['MAILTHIS_DISABLE_SEND'].nil?
+      deliver_smtp if ENV['MAILTHIS_DISABLE_SEND'].nil?
 
       log_message # and return it
     end
