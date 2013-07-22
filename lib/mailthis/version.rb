@@ -1,3 +1,3 @@
 module Mailthis
-  VERSION = "1.5.0"
+  VERSION = "0.0.1"
 end

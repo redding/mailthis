@@ -1,12 +1,7 @@
-module Mailer
+module Mailthis
 
-  class MailerError < StandardError
-  end
-  
-  class ConfigError < MailerError
-  end
-  
-  class SendError < MailerError
-  end
+  MailthisError = Class.new(StandardError)
+  MailerError   = Class.new(MailthisError)
+  MessageError  = Class.new(MailthisError)
 
 end
