@@ -153,6 +153,30 @@ class Mailthis::Mailer
       assert_not_empty @out
     end
 
+    should "build the message from the given block" do
+      built_msg = @mailer.send_mail do
+        from    'me@example.com'
+        to      'you@example.com'
+        subject 'a message'
+      end
+
+      assert_kind_of ::Mail::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
+    end
+
+    should "task a message and apply the given block" do
+      built_msg = @mailer.send_mail(Factory.message) do
+        from 'me@example.com'
+      end
+
+      assert_kind_of ::Mail::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
+    end
+
   end
 
 end

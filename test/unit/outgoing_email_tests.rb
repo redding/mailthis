@@ -29,6 +29,12 @@ class Mailthis::OutgoingEmail
       assert_equal [@mailer.from], subject.message.from
     end
 
+    should "set the message's reply_to to the message's from if message has no reply_to" do
+      assert_nil Factory.message.reply_to
+      assert_not_nil subject.message.reply_to
+      assert_equal subject.message.from, subject.message.reply_to
+    end
+
     should "complain if delivering with an invalid mailer" do
       @mailer.smtp_server = nil
       assert_not @mailer.valid?

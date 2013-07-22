@@ -17,7 +17,8 @@ module Mailthis
 
     def initialize(mailer, message)
       @mailer, @message = mailer, message
-      @message.from ||= @mailer.from if @message.respond_to?(:from=)
+      @message.from     ||= @mailer.from  if @message.respond_to?(:from=)
+      @message.reply_to ||= @message.from if @message.respond_to?(:reply_to=)
     end
 
     def validate!
