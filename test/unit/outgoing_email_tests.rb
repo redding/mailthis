@@ -1,7 +1,6 @@
 require 'assert'
 require 'mailthis/outgoing_email'
 
-require 'test/support/factory'
 require 'mailthis/exceptions'
 
 class Mailthis::OutgoingEmail

@@ -1,4 +1,7 @@
+require 'assert/factory'
+
 module Factory
+  extend Assert::Factory
 
   def self.mailer
     require 'mailthis/mailer'

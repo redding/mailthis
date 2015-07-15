@@ -1,7 +1,6 @@
 require 'assert'
 require 'mailthis/mailer'
 
-require 'test/support/factory'
 require 'mailthis/exceptions'
 
 class Mailthis::Mailer
@@ -19,11 +18,11 @@ class Mailthis::Mailer
     should have_imeths :validate!, :deliver
 
     should "know its smtp settings" do
-      { :smtp_helo   => 'example.com',
-        :smtp_server => 'smtp.example.com',
-        :smtp_port   => 25,
-        :smtp_user   => 'test@example.com',
-        :smtp_pw     => 'secret'
+      { :smtp_helo   => Factory.string,
+        :smtp_server => Factory.string,
+        :smtp_port   => Factory.integer,
+        :smtp_user   => Factory.email,
+        :smtp_pw     => Factory.string
       }.each do |setting, val|
         assert_nil subject.send(setting)
 
@@ -39,7 +38,7 @@ class Mailthis::Mailer
       assert_equal 'plain', subject.smtp_auth
     end
 
-    should "use smtp_user as the from by default" do
+    should "use the smtp user as the from by default" do
       assert_nil subject.from
 
       subject.smtp_user 'user'
@@ -51,7 +50,7 @@ class Mailthis::Mailer
       assert_equal 'a-user', subject.from
     end
 
-    should "know its logger" do
+    should "use a null logger by default" do
       assert_kind_of Mailthis::Mailer::NullLogger, subject.logger
     end
 
@@ -61,11 +60,11 @@ class Mailthis::Mailer
     desc "when validating"
     setup do
       @invalid = Mailthis::Mailer.new do
-        smtp_helo   "example.com"
-        smtp_server "smtp.example.com"
-        smtp_port   25
-        smtp_user   "test@example.com"
-        smtp_pw     "secret"
+        smtp_helo   Factory.string
+        smtp_server Factory.string
+        smtp_port   Factory.integer
+        smtp_user   Factory.email
+        smtp_pw     Factory.string
         smtp_auth   :plain
       end
     end

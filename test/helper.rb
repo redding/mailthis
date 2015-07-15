@@ -6,6 +6,7 @@ $LOAD_PATH.unshift(File.expand_path("../..", __FILE__))
 
 # require pry for debugging (`binding.pry`)
 require 'pry'
+require 'test/support/factory'
 
 # disable actually delivering emails for testing purposes
-ENV['MAILTHIS_DISABLE_SEND'] = 'yes'
+ENV['MAILTHIS_DISABLE_SEND'] = 'y'
