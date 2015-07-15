@@ -1,5 +1,5 @@
-require 'mail'
 require 'mailthis/exceptions'
+require 'mailthis/message'
 require 'mailthis/net_smtp_tls'
 
 module Mailthis
@@ -16,23 +16,21 @@ module Mailthis
     attr_reader :mailer, :message
 
     def initialize(mailer, message)
+      raise Mailthis::MessageError, "invalid message" if !valid_message?(message)
+
       @mailer, @message = mailer, message
-      @message.from     ||= @mailer.from  if @message.respond_to?(:from=)
-      @message.reply_to ||= @message.from if @message.respond_to?(:reply_to=)
+      @message.from     ||= @mailer.from
+      @message.reply_to ||= @message.from
     end
 
     def validate!
-      if !valid_message?
-        raise Mailthis::MessageError, "invalid message"
-      end
-
       REQUIRED_FIELDS.each do |field|
-        if @message.send(field).nil?
+        if !field_present?(@message, field)
           raise Mailthis::MessageError, "missing `#{field}` field"
         end
       end
 
-      if !address_exists?
+      if !fields_present?(@message, ADDRESS_FIELDS)
         raise Mailthis::MessageError, "no #{ADDRESS_FIELDS.join('/')} specified"
       end
     end
@@ -42,21 +40,22 @@ module Mailthis
       @mailer.validate!
       deliver_smtp if ENV['MAILTHIS_DISABLE_SEND'].nil?
 
-      log_message # and return it
+      log_message(@message)
+      @message
     end
 
     private
 
-    def valid_message?
-      (REQUIRED_FIELDS + ADDRESS_FIELDS + [:to_s]).inject(true) do |invalid, meth|
-        invalid && @message.respond_to?(meth)
-      end
+    def valid_message?(message)
+      message.kind_of?(Mailthis::Message)
     end
 
-    def address_exists?
-      ADDRESS_FIELDS.inject(false) do |exists, field|
-        exists || (!@message.send(field).nil? && !@message.send(field).empty?)
-      end
+    def fields_present?(message, fields)
+      fields.inject(false){ |present, f| present || field_present?(message, f) }
+    end
+
+    def field_present?(message, field)
+      !message.send(field).nil? && !message.send(field).empty?
     end
 
     def deliver_smtp
@@ -78,15 +77,16 @@ module Mailthis
       end
     end
 
-    def log_message
-      @message.tap do |msg|
-        log "Sent '#{msg.subject}' to #{msg.to ? msg.to.join(', ') : "''"}"
+    def log_message(msg)
+      log "Sent '#{msg.subject}' to #{msg.to ? msg.to.join(', ') : "''"}"
+      log debug_log_entry(msg), :debug
+    end
 
-        log "\n"\
-            "==============================================================\n"\
-            "#{msg}\n"\
-            "==============================================================\n", :debug
-      end
+    def debug_log_entry(msg)
+      "\n"\
+      "==============================================================\n"\
+      "#{msg}\n"\
+      "==============================================================\n"
     end
 
     def log(msg, level = nil)

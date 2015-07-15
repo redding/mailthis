@@ -17,13 +17,13 @@ module Factory
   end
 
   def self.message(settings = nil)
-    require 'mail'
-    message = Mail.new do
-      to      'you@example.com'
-      subject 'a message'
-    end
+    require 'mailthis/message'
+    message = Mailthis::Message.new
+    message.to      'you@example.com'
+    message.subject 'a message'
+
     (settings || {}).inject(message) do |msg, (setting, value)|
-      msg[setting] = value
+      msg.send("#{setting}=", value)
       msg
     end
   end
