@@ -55,6 +55,19 @@ msg.body     = "a message body"
 GMAIL.deliver(msg)
 ```
 
+### Disable sending mail
+
+You can disable actually sending mail (in tests, non-production envs, etc) by setting the `MAILTHIS_DISABLE_SEND` environment variable.  For example:
+
+```ruby
+if !production?
+  # disable actually delivering emails when not in production
+  ENV['MAILTHIS_DISABLE_SEND'] = 'y'
+end
+```
+
+Just set the env var to *any* not-nil value and mailthis will not send any mail.  It will do everything else, however, including logging the mail it would have sent.
+
 ## Installation
 
 Add this line to your application's Gemfile:
