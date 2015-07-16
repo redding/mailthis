@@ -66,7 +66,32 @@ if !production?
 end
 ```
 
-Just set the env var to *any* not-nil value and mailthis will not send any mail.  It will do everything else, however, including logging the mail it would have sent.
+Set the env var to *any not-nil* value and mailthis will not send any mail.  It will do everything else, however, including logging the mail it would have sent and "delivering" the message in test mode (see below).
+
+### Test Mode
+
+When testing it is often nice to be able to check and see if your code delivered email or not.  Mailthis has a test mode where the mailer tracks
+the messages it delivers.  Enable this with the env var `MAILTHIS_TEST_MODE`
+in your tests.
+
+```ruby
+# in your test helper or whatever
+ENV['MAILTHIS_TEST_MODE'] = 'y'
+
+# in your tests or whatever
+should "email a notification" do
+  assert_not_empty my_mailer.delivered_messages
+
+  msg = my_mailer.delivered_messages.last
+  exp_notification = Notification.new
+  assert_equal [exp_notification.to],    msg.to
+  assert_equal exp_notification.subject, msg.subject
+  assert_equal exp_notification.body,    msg.body.to_s
+  # or whatever your test logic may be, this is just an example
+end
+```
+
+Set the env var to *any not-nil* value to enable this mode.
 
 ## Installation
 
