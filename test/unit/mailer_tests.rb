@@ -4,12 +4,41 @@ require 'mailthis/mailer'
 require 'mailthis/exceptions'
 require 'mailthis/message'
 
-class Mailthis::Mailer
+module Mailthis::Mailer
 
   class UnitTests < Assert::Context
     desc "Mailthis::Mailer"
     setup do
-      @mailer = Mailthis::Mailer.new
+      @current_test_mode = ENV['MAILTHIS_TEST_MODE']
+      ENV['MAILTHIS_TEST_MODE'] = 'yes'
+    end
+    teardown do
+      ENV['MAILTHIS_TEST_MODE'] = @current_test_mode
+    end
+    subject{ Mailthis::Mailer }
+
+    should have_imeths :new
+
+    should "return a mailthis mailer using `new`" do
+      ENV.delete('MAILTHIS_TEST_MODE')
+      mailer = subject.new
+      assert_instance_of Mailthis::MailthisMailer, mailer
+    end
+
+    should "return a test mailer using `new` in test mode" do
+      mailer = subject.new
+      assert_instance_of Mailthis::TestMailer, mailer
+    end
+
+  end
+
+  class InitTests < UnitTests
+    desc "when init"
+    setup do
+      @mailer_class = Class.new do
+        include Mailthis::Mailer
+      end
+      @mailer = @mailer_class.new
     end
     subject{ @mailer }
 
@@ -53,6 +82,50 @@ class Mailthis::Mailer
 
     should "use a null logger by default" do
       assert_kind_of Mailthis::Mailer::NullLogger, subject.logger
+    end
+
+  end
+
+  class SendMailTests < InitTests
+    desc "and sending mail"
+    setup do
+      @message = Factory.message(:from => "me@example.com")
+      @mailer  = Factory.mailer
+      @mailer.logger = Factory.logger(@out = "")
+
+      @sent_msg = @mailer.deliver(@message)
+    end
+
+    should "return the message that was sent" do
+      assert_same @message, @sent_msg
+    end
+
+    should "log that the message was sent" do
+      assert_not_empty @out
+    end
+
+    should "build the message from the given block" do
+      built_msg = @mailer.deliver do
+        from    'me@example.com'
+        to      'you@example.com'
+        subject 'a message'
+      end
+
+      assert_kind_of Mailthis::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
+    end
+
+    should "task a message and apply the given block" do
+      built_msg = @mailer.deliver(Factory.message) do
+        from 'me@example.com'
+      end
+
+      assert_kind_of Mailthis::Message, built_msg
+      assert_equal ['me@example.com'], built_msg.from
+      assert_equal ['you@example.com'], built_msg.to
+      assert_equal 'a message', built_msg.subject
     end
 
   end
@@ -135,46 +208,60 @@ class Mailthis::Mailer
 
   end
 
-  class SendMailTests < UnitTests
-    desc "when sending mail"
+  class MailthisMailerTests < UnitTests
+    desc "MailthisMailer"
     setup do
-      @message = Factory.message(:from => "me@example.com")
-      @mailer  = Factory.mailer
-      @mailer.logger = Factory.logger(@out = "")
+      @mailer_class = Mailthis::MailthisMailer
+    end
+    subject{ @mailer_class }
 
-      @sent_msg = @mailer.deliver(@message)
+    should "include the Mailer mixin" do
+      assert_includes Mailthis::Mailer, subject
     end
 
-    should "return the message that was sent" do
-      assert_same @message, @sent_msg
+  end
+
+  class TestMailerTests < UnitTests
+    desc "TestMailer"
+    setup do
+      @mailer_class = Mailthis::TestMailer
+    end
+    subject{ @mailer_class }
+
+    should "include the Mailer mixin" do
+      assert_includes Mailthis::Mailer, subject
     end
 
-    should "log that the message was sent" do
-      assert_not_empty @out
+  end
+
+  class TestMailerInitTests < TestMailerTests
+    desc "when init"
+    setup do
+      @message = Factory.message
+      @mailer  = Factory.mailer # b/c in test mode, this is a test mailer
+    end
+    subject{ @mailer }
+
+    should have_readers :delivered_messages
+    should have_imeths :reset
+
+    should "not have any delivered messages by default" do
+      assert_empty subject.delivered_messages
     end
 
-    should "build the message from the given block" do
-      built_msg = @mailer.deliver do
-        from    'me@example.com'
-        to      'you@example.com'
-        subject 'a message'
-      end
+    should "add messages to its delivered messages when delivering them" do
+      subject.deliver(@message)
 
-      assert_kind_of Mailthis::Message, built_msg
-      assert_equal ['me@example.com'], built_msg.from
-      assert_equal ['you@example.com'], built_msg.to
-      assert_equal 'a message', built_msg.subject
+      assert_equal 1, subject.delivered_messages.size
+      assert_same @message, subject.delivered_messages.last
     end
 
-    should "task a message and apply the given block" do
-      built_msg = @mailer.deliver(Factory.message) do
-        from 'me@example.com'
-      end
+    should "clear its delivered messages on reset" do
+      subject.deliver(@message)
+      assert_equal 1, subject.delivered_messages.size
 
-      assert_kind_of Mailthis::Message, built_msg
-      assert_equal ['me@example.com'], built_msg.from
-      assert_equal ['you@example.com'], built_msg.to
-      assert_equal 'a message', built_msg.subject
+      subject.reset
+      assert_empty subject.delivered_messages
     end
 
   end
