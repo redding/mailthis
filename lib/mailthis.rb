@@ -1,5 +1,6 @@
 require 'mailthis/version'
 require 'mailthis/exceptions'
+require 'mailthis/message'
 require 'mailthis/mailer'
 
 module Mailthis

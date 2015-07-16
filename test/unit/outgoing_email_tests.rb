@@ -34,22 +34,17 @@ class Mailthis::OutgoingEmail
       assert_equal subject.message.from, subject.message.reply_to
     end
 
+    should "complain if given an invalid message" do
+      assert_raises(Mailthis::MessageError) do
+        Mailthis::OutgoingEmail.new(@mailer, 'invalid-msg')
+      end
+    end
+
     should "complain if delivering with an invalid mailer" do
       @mailer.smtp_server = nil
       assert_not @mailer.valid?
 
-      assert_raises(Mailthis::MailerError) do
-        subject.deliver
-      end
-    end
-
-    should "complain if delivering an invalid message" do
-      msg = Factory.message
-      msg.to = nil
-
-      assert_raises(Mailthis::MessageError) do
-        Mailthis::OutgoingEmail.new(@mailer, msg).deliver
-      end
+      assert_raises(Mailthis::MailerError){ subject.deliver }
     end
 
     should "log when delivering a message" do
@@ -83,13 +78,14 @@ class Mailthis::OutgoingEmail
     should "complain if the message is missing required fields" do
       msg = Factory.message
       msg.subject = nil
+
       assert_invalid_with msg
     end
 
     should "complain if the message is not addressed to anyone" do
       msg = Factory.message
-
       msg.to = msg.cc = msg.bcc = nil
+
       assert_invalid_with msg
     end
 

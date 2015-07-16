@@ -43,7 +43,7 @@ GMAIL = Mailthis.mailer do
   logger    Logger.new("log/email.log") # (optional) default: no logger, no logging
 end
 
-msg = Mail.new
+msg = Mailthis::Message.new
 msg.from     = 'bob@example.com',       # (optional) default: mailer #from
 msg.reply_to = 'bob@me.com',            # (optional) default: self #from
 msg.to       = "you@example.com",

@@ -2,6 +2,7 @@ require 'assert'
 require 'mailthis/mailer'
 
 require 'mailthis/exceptions'
+require 'mailthis/message'
 
 class Mailthis::Mailer
 
@@ -159,7 +160,7 @@ class Mailthis::Mailer
         subject 'a message'
       end
 
-      assert_kind_of ::Mail::Message, built_msg
+      assert_kind_of Mailthis::Message, built_msg
       assert_equal ['me@example.com'], built_msg.from
       assert_equal ['you@example.com'], built_msg.to
       assert_equal 'a message', built_msg.subject
@@ -170,7 +171,7 @@ class Mailthis::Mailer
         from 'me@example.com'
       end
 
-      assert_kind_of ::Mail::Message, built_msg
+      assert_kind_of Mailthis::Message, built_msg
       assert_equal ['me@example.com'], built_msg.from
       assert_equal ['you@example.com'], built_msg.to
       assert_equal 'a message', built_msg.subject

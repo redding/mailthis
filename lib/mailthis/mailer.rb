@@ -1,6 +1,6 @@
 require 'ns-options/proxy'
-require 'mail'
 require 'mailthis/exceptions'
+require 'mailthis/message'
 require 'mailthis/outgoing_email'
 
 module Mailthis
@@ -32,7 +32,7 @@ module Mailthis
     end
 
     def deliver(message = nil, &block)
-      (message || ::Mail.new).tap do |msg|
+      (message || ::Mailthis::Message.new).tap do |msg|
         msg.instance_eval(&block) if block
         OutgoingEmail.new(self, msg).deliver
       end
