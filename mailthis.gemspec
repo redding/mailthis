@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version     = Mailthis::VERSION
   gem.authors     = ["Kelly Redding", "Collin Redding"]
   gem.email       = ["kelly@kellyredding.com", "collin.redding@me.com"]
-  gem.description = %q{mailer for ruby}
   gem.summary     = %q{mailer for ruby}
+  gem.description = %q{mailer for ruby}
   gem.homepage    = "http://github.com/redding/mailthis"
   gem.license     = 'MIT'
 
@@ -18,9 +18,9 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.add_development_dependency("assert", ["~> 2.14"])
+  gem.add_development_dependency("assert", ["~> 2.15.1"])
 
-  gem.add_dependency("ns-options", ["~> 1.1", ">= 1.1.4"])
+  gem.add_dependency("ns-options", ["~> 1.1.6"])
   gem.add_dependency("mail",       ["~> 2.5"])
 
 end
