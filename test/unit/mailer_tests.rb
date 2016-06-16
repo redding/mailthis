@@ -245,7 +245,7 @@ module Mailthis::Mailer
 
   end
 
-  class MailthisMailerTests < UnitTests
+  class MailthisMailerTests < Assert::Context
     desc "MailthisMailer"
     setup do
       @mailer_class = Mailthis::MailthisMailer
@@ -258,7 +258,23 @@ module Mailthis::Mailer
 
   end
 
-  class TestMailerTests < UnitTests
+  class MailthisMailerInitTests < MailthisMailerTests
+    desc "when init"
+    setup do
+      @message = Factory.message
+
+      ENV.delete('MAILTHIS_TEST_MODE')
+      @mailer  = Factory.mailer # b/c not in test mode, this is a mailthis mailer
+    end
+    subject{ @mailer }
+
+    should "return the message when delivering" do
+      assert_same @message, subject.deliver(@message)
+    end
+
+  end
+
+  class TestMailerTests < Assert::Context
     desc "TestMailer"
     setup do
       @mailer_class = Mailthis::TestMailer
@@ -274,13 +290,23 @@ module Mailthis::Mailer
   class TestMailerInitTests < TestMailerTests
     desc "when init"
     setup do
+      @current_test_mode = ENV['MAILTHIS_TEST_MODE']
+      ENV['MAILTHIS_TEST_MODE'] = 'yes'
+
       @message = Factory.message
       @mailer  = Factory.mailer # b/c in test mode, this is a test mailer
+    end
+    teardown do
+      ENV['MAILTHIS_TEST_MODE'] = @current_test_mode
     end
     subject{ @mailer }
 
     should have_readers :delivered_messages
     should have_imeths :reset
+
+    should "return the message when delivering" do
+      assert_same @message, subject.deliver(@message)
+    end
 
     should "not have any delivered messages by default" do
       assert_empty subject.delivered_messages
