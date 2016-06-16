@@ -41,17 +41,19 @@ class Mailthis::OutgoingEmail
     end
 
     should "complain if delivering with an invalid mailer" do
-      @mailer.smtp_server = nil
-      assert_not @mailer.valid?
+      mailer = Factory.mailer(:smtp_server => nil)
+      assert_false mailer.valid?
 
-      assert_raises(Mailthis::MailerError){ subject.deliver }
+      email  = Mailthis::OutgoingEmail.new(mailer, @message)
+      assert_raises(Mailthis::MailerError){ email.deliver }
     end
 
     should "log when delivering a message" do
-      @mailer.logger = Factory.logger(out = "")
+      mailer = Factory.mailer(:logger => Factory.logger(out = ""))
       assert_empty out
 
-      subject.deliver
+      email  = Mailthis::OutgoingEmail.new(mailer, @message)
+      email.deliver
 
       assert_not_empty out
       assert_includes "Sent '#{@message.subject}'", out

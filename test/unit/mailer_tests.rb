@@ -19,6 +19,24 @@ module Mailthis::Mailer
 
     should have_imeths :new
 
+    should "know its required settings" do
+     exp = [
+       :smtp_helo,
+       :smtp_server,
+       :smtp_port,
+       :smtp_user,
+       :smtp_pw,
+       :smtp_auth,
+       :from,
+       :logger
+     ]
+     assert_equal exp, subject::REQUIRED_SETTINGS
+    end
+
+    should "know its default auth value" do
+      assert_equal 'login', subject::DEFAULT_AUTH
+    end
+
     should "return a mailthis mailer using `new`" do
       ENV.delete('MAILTHIS_TEST_MODE')
       mailer = subject.new
@@ -45,9 +63,9 @@ module Mailthis::Mailer
     should have_imeths :smtp_helo, :smtp_server, :smtp_port
     should have_imeths :smtp_user, :smtp_pw, :smtp_auth
     should have_imeths :from, :logger
-    should have_imeths :validate!, :deliver
+    should have_imeths :valid?, :validate!, :deliver
 
-    should "know its smtp settings" do
+    should "know its smtp helo, server, port and user settings" do
       { :smtp_helo   => Factory.string,
         :smtp_server => Factory.string,
         :smtp_port   => Factory.integer,
@@ -61,27 +79,124 @@ module Mailthis::Mailer
       end
     end
 
-    should "use `\"login\"` as the auth by default" do
-      assert_equal "login", subject.smtp_auth
+    should "know its smtp auth setting" do
+      assert_equal DEFAULT_AUTH, subject.smtp_auth
 
-      subject.smtp_auth 'plain'
-      assert_equal 'plain', subject.smtp_auth
+      exp = Factory.string
+      subject.smtp_auth exp
+      assert_equal exp, subject.smtp_auth
     end
 
-    should "use the smtp user as the from by default" do
+    should "know its from setting" do
       assert_nil subject.from
 
-      subject.smtp_user 'user'
-      assert_equal 'user', subject.from
+      exp = Factory.email
+      subject.from exp
+      assert_equal exp, subject.from
     end
 
-    should "allow overriding the from" do
-      subject.from 'a-user'
-      assert_equal 'a-user', subject.from
+    should "know its logger setting" do
+      assert_instance_of NullLogger, subject.logger
+
+      exp = Factory.string
+      subject.logger exp
+      assert_equal exp, subject.logger
     end
 
-    should "use a null logger by default" do
-      assert_kind_of Mailthis::Mailer::NullLogger, subject.logger
+  end
+
+  class ValidationTests < UnitTests
+    desc "when validating"
+    setup do
+      @valid_settings = {
+        :smtp_helo   => Factory.string,
+        :smtp_server => Factory.string,
+        :smtp_port   => Factory.integer,
+        :smtp_user   => Factory.email,
+        :smtp_pw     => Factory.string,
+        :smtp_auth   => :plain,
+        :from        => nil
+      }
+      @valid_mailer = Factory.mailer(@valid_settings)
+    end
+    subject{ @valid_mailer }
+
+    should "not be valid until validated" do
+      assert_false subject.valid?
+      subject.validate!
+      assert_true subject.valid?
+    end
+
+    should "not complain if all settings are in place" do
+      assert_valid(subject)
+    end
+
+    should "return itself when validating" do
+      assert_same subject, subject.validate!
+    end
+
+    should "set the from to the smtp user if it isn't set already" do
+      assert_nil subject.from
+
+      subject.validate!
+      assert_equal subject.smtp_user, subject.from
+    end
+
+    should "be invalid if no helo domain is set" do
+      @valid_settings[:smtp_helo] = nil
+      assert_invalid(Factory.mailer(@valid_settings))
+    end
+
+    should "be invalid if no server is set" do
+      @valid_settings[:smtp_server] = nil
+      assert_invalid(Factory.mailer(@valid_settings))
+    end
+
+    should "be invalid if no port is set" do
+      @valid_settings[:smtp_port] = nil
+      assert_invalid(Factory.mailer(@valid_settings))
+    end
+
+    should "be invalid if no user is set" do
+      @valid_settings[:smtp_user] = nil
+      assert_invalid(Factory.mailer(@valid_settings))
+    end
+
+    should "be invalid if no pw is set" do
+      @valid_settings[:smtp_pw] = nil
+      assert_invalid(Factory.mailer(@valid_settings))
+    end
+
+    should "not be invalid if no auth is set" do
+      # b/c it has a default value
+      @valid_settings[:smtp_auth] = nil
+      assert_valid(Factory.mailer(@valid_settings))
+    end
+
+    should "not be invalid if no from is set" do
+      # b/c it is defaulted from the smtp user
+      @valid_settings[:from] = nil
+      assert_valid(Factory.mailer(@valid_settings))
+    end
+
+    should "not be invalid if no logger is set" do
+      # b/c it is defaulted to a NullLogger
+      @valid_settings[:logger] = nil
+      assert_valid(Factory.mailer(@valid_settings))
+    end
+
+    private
+
+    def assert_valid(mailer)
+      with_backtrace(caller) do
+        assert_nothing_raised{ mailer.validate! }
+      end
+    end
+
+    def assert_invalid(mailer)
+      with_backtrace(caller) do
+        assert_raises(Mailthis::MailerError){ mailer.validate! }
+      end
     end
 
   end
@@ -91,7 +206,7 @@ module Mailthis::Mailer
     setup do
       @message = Factory.message(:from => "me@example.com")
       @mailer  = Factory.mailer
-      @mailer.logger = Factory.logger(@out = "")
+      @mailer.logger(Factory.logger(@out = ""))
 
       @sent_msg = @mailer.deliver(@message)
     end
@@ -126,84 +241,6 @@ module Mailthis::Mailer
       assert_equal ['me@example.com'], built_msg.from
       assert_equal ['you@example.com'], built_msg.to
       assert_equal 'a message', built_msg.subject
-    end
-
-  end
-
-  class ValidationTests < UnitTests
-    desc "when validating"
-    setup do
-      @invalid = Mailthis::Mailer.new do
-        smtp_helo   Factory.string
-        smtp_server Factory.string
-        smtp_port   Factory.integer
-        smtp_user   Factory.email
-        smtp_pw     Factory.string
-        smtp_auth   :plain
-      end
-    end
-    subject{ @invalid }
-
-    should "not complain if all settings are in place" do
-      assert_valid
-    end
-
-    should "return itself when validating" do
-      assert_same subject, subject.validate!
-    end
-
-    should "be invalid if missing the helo domain" do
-      subject.smtp_helo = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the server" do
-      subject.smtp_server = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the port" do
-      subject.smtp_port = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the user" do
-      subject.smtp_user = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the pw" do
-      subject.smtp_pw = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the auth" do
-      subject.smtp_auth = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the from" do
-      subject.from = nil
-      assert_invalid
-    end
-
-    should "be invalid if missing the logger" do
-      subject.logger = nil
-      assert_invalid
-    end
-
-    private
-
-    def assert_valid
-      assert_nothing_raised do
-        subject.validate!
-      end
-    end
-
-    def assert_invalid
-      assert_raises(Mailthis::MailerError) do
-        subject.validate!
-      end
     end
 
   end

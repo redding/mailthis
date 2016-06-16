@@ -3,16 +3,18 @@ require 'assert/factory'
 module Factory
   extend Assert::Factory
 
-  def self.mailer
+  def self.mailer(s = {})
+    s ||= {}
     require 'mailthis/mailer'
     Mailthis::Mailer.new do
-      smtp_helo   "example.com"
-      smtp_server "smtp.example.com"
-      smtp_port   25
-      smtp_user   "test@example.com"
-      smtp_pw     "secret"
-      smtp_auth   :plain
-      from        "me@example.com"
+      smtp_helo   (s.key?(:smtp_helo)   ? s[:smtp_helo]   : "example.com")
+      smtp_server (s.key?(:smtp_server) ? s[:smtp_server] : "smtp.example.com")
+      smtp_port   (s.key?(:smtp_port)   ? s[:smtp_port]   : 25)
+      smtp_user   (s.key?(:smtp_user)   ? s[:smtp_user]   : "test@example.com")
+      smtp_pw     (s.key?(:smtp_pw)     ? s[:smtp_pw]     : "secret")
+      smtp_auth   (s.key?(:smtp_auth)   ? s[:smtp_auth]   : :plain)
+      from        (s.key?(:from)        ? s[:from]        : "me@example.com")
+      logger      (s.key?(:logger)      ? s[:logger]      : nil)
     end
   end
 
