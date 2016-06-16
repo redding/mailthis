@@ -1,4 +1,4 @@
-require 'ns-options/proxy'
+require 'much-plugin'
 require 'mailthis/exceptions'
 require 'mailthis/message'
 require 'mailthis/outgoing_email'
@@ -6,6 +6,24 @@ require 'mailthis/outgoing_email'
 module Mailthis
 
   module Mailer
+    include MuchPlugin
+
+    plugin_included do
+      include InstanceMethods
+
+    end
+
+    REQUIRED_SETTINGS = [
+      :smtp_helo,
+      :smtp_server,
+      :smtp_port,
+      :smtp_user,
+      :smtp_pw,
+      :smtp_auth,
+      :from,
+      :logger
+    ].freeze
+    DEFAULT_AUTH = 'login'.freeze
 
     def self.new(*args, &block)
       if !ENV['MAILTHIS_TEST_MODE']
@@ -15,36 +33,69 @@ module Mailthis
       end
     end
 
-    def self.included(klass)
-      klass.class_eval do
-        include NsOptions::Proxy
-        include InstanceMethods
-
-        option :smtp_helo,   String,  :required => true
-        option :smtp_server, String,  :required => true
-        option :smtp_port,   Integer, :required => true
-        option :smtp_user,   String,  :required => true
-        option :smtp_pw,     String,  :required => true
-        option :smtp_auth,   String,  :required => true, :default => proc{ "login" }
-
-        option :from,   String, :required => true
-        option :logger,         :required => true, :default => proc{ NullLogger.new }
-
-      end
-    end
-
     module InstanceMethods
 
-      def initialize(values = nil, &block)
-        # this is defaulted here because we want to use the Configuration instance
-        # `smtp_user`. If we define a proc above, we will be using the Configuration
-        # class `smtp_user`, which will not update the option as expected.
-        super((values || {}).merge(:from => proc{ self.smtp_user }))
-        self.define(&block)
+      def initialize(&block)
+        @nil_settings = nil
+        @smtp_auth    = DEFAULT_AUTH
+        @logger       = NullLogger.new
+
+        self.instance_eval(&block) if block
+      end
+
+      def smtp_helo(value = nil)
+        @smtp_helo = value if !value.nil?
+        @smtp_helo
+      end
+
+      def smtp_server(value = nil)
+        @smtp_server = value if !value.nil?
+        @smtp_server
+      end
+
+      def smtp_port(value = nil)
+        @smtp_port = value if !value.nil?
+        @smtp_port
+      end
+
+      def smtp_user(value = nil)
+        @smtp_user = value if !value.nil?
+        @smtp_user
+      end
+
+      def smtp_pw(value = nil)
+        @smtp_pw = value if !value.nil?
+        @smtp_pw
+      end
+
+      def smtp_auth(value = nil)
+        @smtp_auth = value.to_s if !value.nil?
+        @smtp_auth
+      end
+
+      def from(value = nil)
+        @from = value if !value.nil?
+        @from
+      end
+
+      def logger(value = nil)
+        @logger = value if !value.nil?
+        @logger
+      end
+
+      def valid?
+        !@nil_settings.nil? && @nil_settings.empty?
       end
 
       def validate!
-        raise(MailerError, "missing required settings") if !valid?
+        @from = self.smtp_user if @from.nil?
+
+        @nil_settings = []
+        REQUIRED_SETTINGS.each{ |s| @nil_settings << s if self.send(s).nil? }
+        if !self.valid?
+          raise(MailerError, "missing required settings: #{@nil_settings.join(', ')}")
+        end
+
         self # for chaining
       end
 

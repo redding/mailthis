@@ -39,7 +39,7 @@ GMAIL = Mailthis.mailer do
   smtp_pw     'secret'
 
   smtp_auth "plain"                     # (optional) default: "login"
-  from      "me@example.com"            # (optional) default: config.smtp_username (if valid)
+  from      "me@example.com"            # (optional) default: `smtp_user` (if valid)
   logger    Logger.new("log/email.log") # (optional) default: no logger, no logging
 end
 
