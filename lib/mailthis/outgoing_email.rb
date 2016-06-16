@@ -35,13 +35,20 @@ module Mailthis
       end
     end
 
-    def deliver
+    def deliver_dry_run
       self.validate!
       @mailer.validate!
-      deliver_smtp if ENV['MAILTHIS_DISABLE_SEND'].nil?
 
-      log_message(@message)
-      @message
+      yield(self.message) if block_given?
+
+      log_message(self.message)
+      self.message
+    end
+
+    def deliver
+      self.deliver_dry_run do |msg|
+        deliver_smtp(msg) if ENV['MAILTHIS_DISABLE_SEND'].nil?
+      end
     end
 
     private
@@ -58,7 +65,7 @@ module Mailthis
       !message.send(field).nil? && !message.send(field).empty?
     end
 
-    def deliver_smtp
+    def deliver_smtp(msg)
       smtp_start_args = [
         @mailer.smtp_server,
         @mailer.smtp_port,
@@ -70,8 +77,8 @@ module Mailthis
 
       Net::SMTP.start(*smtp_start_args) do |smtp|
         ADDRESS_FIELDS.each do |field|
-          if (recipients = @message.send(field))
-            recipients.each{ |r| smtp.send_message(@message.to_s, @message.from, r) }
+          if (recipients = msg.send(field))
+            recipients.each{ |r| smtp.send_message(msg.to_s, msg.from, r) }
           end
         end
       end

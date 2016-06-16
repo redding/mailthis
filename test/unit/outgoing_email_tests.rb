@@ -15,7 +15,7 @@ class Mailthis::OutgoingEmail
     subject{ @email }
 
     should have_readers :mailer, :message
-    should have_imeths :validate!, :deliver
+    should have_imeths :validate!, :deliver_dry_run, :deliver
 
     should "know its mailer and message" do
       assert_same @mailer, subject.mailer
@@ -40,20 +40,26 @@ class Mailthis::OutgoingEmail
       end
     end
 
+    should "yield the message on deliver dry runs" do
+      subject.deliver_dry_run do |msg|
+        assert_equal subject.message, msg
+      end
+    end
+
     should "complain if delivering with an invalid mailer" do
       mailer = Factory.mailer(:smtp_server => nil)
       assert_false mailer.valid?
 
-      email  = Mailthis::OutgoingEmail.new(mailer, @message)
-      assert_raises(Mailthis::MailerError){ email.deliver }
+      email = Mailthis::OutgoingEmail.new(mailer, @message)
+      assert_raises(Mailthis::MailerError){ email.send(deliver_method) }
     end
 
     should "log when delivering a message" do
       mailer = Factory.mailer(:logger => Factory.logger(out = ""))
       assert_empty out
 
-      email  = Mailthis::OutgoingEmail.new(mailer, @message)
-      email.deliver
+      email = Mailthis::OutgoingEmail.new(mailer, @message)
+      email.send(deliver_method)
 
       assert_not_empty out
       assert_includes "Sent '#{@message.subject}'", out
@@ -61,7 +67,13 @@ class Mailthis::OutgoingEmail
     end
 
     should "return the delivered message" do
-      assert_same @message, subject.deliver
+      assert_same subject.message, subject.send(deliver_method)
+    end
+
+    private
+
+    def deliver_method
+      [:deliver, :deliver_dry_run].choice
     end
 
   end

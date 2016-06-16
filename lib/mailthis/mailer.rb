@@ -100,9 +100,18 @@ module Mailthis
       end
 
       def deliver(message = nil, &block)
+        raise NotImplementedError
+      end
+
+      private
+
+      def outgoing_email(message, &block)
+        OutgoingEmail.new(self, build_message(message, &block))
+      end
+
+      def build_message(message, &block)
         (message || ::Mailthis::Message.new).tap do |msg|
           msg.instance_eval(&block) if block
-          OutgoingEmail.new(self, msg).deliver
         end
       end
 
@@ -120,6 +129,10 @@ module Mailthis
   class MailthisMailer
     include Mailer
 
+    def deliver(message = nil, &block)
+      outgoing_email(message, &block).deliver
+    end
+
   end
 
   class TestMailer
@@ -132,9 +145,9 @@ module Mailthis
       @delivered_messages = []
     end
 
-    def deliver(*args, &block)
-      super(*args, &block).tap do |msg|
-        @delivered_messages << msg
+    def deliver(message = nil, &block)
+      outgoing_email(message, &block).deliver_dry_run do |msg|
+        self.delivered_messages << msg
       end
     end
 
