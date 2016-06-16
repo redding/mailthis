@@ -18,7 +18,7 @@ module Mailthis
       port   = Factory.integer
       user   = Factory.email
       pw     = Factory.string
-      auth   = [:plain, :login].choice
+      auth   = [:plain, :login].sample
 
       mailer = Mailthis.mailer do
         smtp_helo   helo

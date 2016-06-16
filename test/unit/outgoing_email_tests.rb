@@ -73,7 +73,7 @@ class Mailthis::OutgoingEmail
     private
 
     def deliver_method
-      [:deliver, :deliver_dry_run].choice
+      [:deliver, :deliver_dry_run].sample
     end
 
   end
